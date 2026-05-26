@@ -17,12 +17,12 @@ export default function Notifications() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-800">Notificaciones</h1>
-        <p className="text-gray-500">Actividad reciente: logins, cambios, tareas, bugs e infraestructura.</p>
+        <h1 className="text-2xl font-bold text-gray-800">Notificações</h1>
+        <p className="text-gray-500">Atividade recente: logins, alterações, tarefas, bugs e infraestrutura.</p>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border divide-y">
-        {isLoading && <p className="p-6 text-gray-500">Cargando actividad...</p>}
+        {isLoading && <p className="p-6 text-gray-500">Carregando atividade...</p>}
         {logs?.map((log: any) => {
           const Icon = iconByAction[log.action] || Bell;
           return (
@@ -33,14 +33,14 @@ export default function Notifications() {
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-gray-800">{log.message}</p>
                 <p className="text-sm text-gray-500">
-                  {log.user?.name || 'Sistema'} · {new Date(log.createdAt).toLocaleString('es-ES')}
+                  {log.user?.name || 'Sistema'} · {new Date(log.createdAt).toLocaleString('pt-BR')}
                 </p>
                 {log.metadata && <pre className="mt-2 text-xs bg-gray-50 p-2 rounded overflow-x-auto">{log.metadata}</pre>}
               </div>
             </div>
           );
         })}
-        {(!logs || logs.length === 0) && !isLoading && <p className="p-6 text-gray-500">Todavía no hay actividad registrada.</p>}
+        {(!logs || logs.length === 0) && !isLoading && <p className="p-6 text-gray-500">Ainda não há atividade registrada.</p>}
       </div>
     </div>
   );

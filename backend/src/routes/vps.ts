@@ -64,7 +64,7 @@ export default async function vpsRoutes(fastify: FastifyInstance) {
       }
     });
 
-    if (!server) return reply.status(404).send({ error: 'Server not found' });
+    if (!server) return reply.status(404).send({ error: 'Servidor não encontrado' });
 
     const { projectLinks, ...serverData } = server;
     return { ...serverData, infrastructure: projectLinks };
@@ -74,9 +74,9 @@ export default async function vpsRoutes(fastify: FastifyInstance) {
     const data = vpsSchema.parse(request.body);
     let providerId = data.providerId;
     if (!providerId) {
-      let provider = await fastify.prisma.provider.findFirst({ where: { name: 'Sin proveedor', type: 'VPS' } });
+      let provider = await fastify.prisma.provider.findFirst({ where: { name: 'Sem provedor', type: 'VPS' } });
       if (!provider) {
-        provider = await fastify.prisma.provider.create({ data: { name: 'Sin proveedor', type: 'VPS' } });
+        provider = await fastify.prisma.provider.create({ data: { name: 'Sem provedor', type: 'VPS' } });
       }
       providerId = provider.id;
     }
@@ -94,7 +94,7 @@ export default async function vpsRoutes(fastify: FastifyInstance) {
       action: 'vps.create',
       entityType: 'VpsServer',
       entityId: server.id,
-      message: `Agregó el VPS: ${server.name}`
+      message: `Adicionou o VPS: ${server.name}`
     });
 
     return server;

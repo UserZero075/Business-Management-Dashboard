@@ -16,7 +16,7 @@ async function readCompanySettings(fastify: FastifyInstance) {
 
   return {
     companyName: values.companyName || 'DevFast',
-    companyObjective: values.companyObjective || 'Manager open-source para operar proyectos, infraestructura, finanzas y equipo.',
+    companyObjective: values.companyObjective || 'Gestor open-source para operar projetos, infraestrutura, finanças e equipe.',
     companyLogoUrl: values.companyLogoUrl || '',
   };
 }
@@ -44,7 +44,7 @@ export default async function settingsRoutes(fastify: FastifyInstance) {
       userId: (request.user as any).id,
       action: 'settings.company.update',
       entityType: 'Settings',
-      message: `Actualizó la configuración de empresa a ${normalized.companyName}`,
+      message: `Atualizou a configuração da empresa para ${normalized.companyName}`,
       metadata: normalized,
     });
 

@@ -18,6 +18,7 @@ backend/dist/
 *.sqlite
 *.sqlite3
 data/
+backups/
 
 # Logs
 *.log
@@ -30,3 +31,6 @@ pnpm-debug.log*
 .DS_Store
 .vscode/
 .idea/
+
+# Tooling state (caches de sessão de agentes, não versionar)
+.omc/

@@ -1,18 +1,18 @@
-# DevFast Manager Deployment
+# Deploy do DevFast Manager
 
-This project can run in two modes:
+Este projeto pode rodar em dois modos:
 
-- Development: Vite + Fastify running separately.
-- Production: Docker Compose with an Nginx frontend reverse-proxy and a Node/Fastify backend.
+- Desenvolvimento: Vite + Fastify rodando separadamente.
+- Produção: Docker Compose com frontend Nginx como proxy reverso e backend Node/Fastify.
 
-## Development
+## Desenvolvimento
 
 Backend:
 
 ```bash
 cd backend
 cp .env.example .env
-# For local dev you can keep NODE_ENV unset or set NODE_ENV=development.
+# Em desenvolvimento local, deixe NODE_ENV vazio ou use NODE_ENV=development.
 npm install
 npx prisma db push
 npm run dev
@@ -23,17 +23,25 @@ Frontend:
 ```bash
 cd frontend
 cp .env.example .env
-# Optional when running split dev servers:
+# Opcional ao rodar servidores separados:
 # VITE_API_URL=http://localhost:3001
 npm install
 npm run dev
 ```
 
-In development, OTP codes are printed only when SMTP is not configured and `NODE_ENV` is not `production`.
+Em desenvolvimento, os códigos OTP só aparecem no console quando SMTP não está configurado e `NODE_ENV` não é `production`.
 
-## Production with Docker Compose
+## Produção em VPS Hostinger com Docker
 
-1. Copy environment templates:
+Este é o caminho recomendado para deixar o sistema online mantendo SQLite. O banco fica no volume Docker `devfast-data`, montado em `/data` no container do backend.
+
+1. Envie o projeto para a VPS, por Git ou `scp`, e entre na pasta do projeto:
+
+```bash
+cd /opt/devfast-manager
+```
+
+2. Copie os modelos de ambiente:
 
 ```bash
 cp .env.example .env
@@ -41,63 +49,108 @@ cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 ```
 
-2. Edit `backend/.env`:
+3. Edite `.env`:
+
+```env
+COMPOSE_PROJECT_NAME=devfast-manager
+WEB_PORT=80
+```
+
+Use `WEB_PORT=8080` apenas se outro Nginx/Caddy/Apache já estiver usando a porta 80 na VPS.
+
+4. Edite `backend/.env`:
 
 ```env
 NODE_ENV=production
 HOST=0.0.0.0
 PORT=3002
 DATABASE_URL=file:/data/devfast.db
-JWT_SECRET=<long-random-secret>
+JWT_SECRET=<segredo-longo-aleatorio>
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_SECURE=false
 SMTP_STARTTLS=true
-SMTP_USER=<gmail-address>
-SMTP_PASS=<gmail-app-password>
-SMTP_FROM=<gmail-address>
+SMTP_USER=<endereco-gmail>
+SMTP_PASS=<senha-de-app-gmail>
+SMTP_FROM=<endereco-gmail>
 ```
 
-Production mode requires SMTP. If SMTP is missing, the OTP endpoint fails instead of leaking dev OTP codes.
+O modo de produção exige SMTP. Se SMTP estiver ausente, o endpoint de OTP falha em vez de expor códigos de desenvolvimento.
 
-3. Start:
+5. Suba a aplicação:
 
 ```bash
+chmod +x scripts/deploy-prod.sh scripts/backup-sqlite.sh
+./scripts/deploy-prod.sh
+```
+
+6. Abra:
+
+```text
+http://<ip-da-vps>
+http://<seu-dominio>
+```
+
+O frontend usa URLs relativas `/api/...` e `/api/chat/ws`, então o mesmo domínio serve a interface, a API e o WebSocket.
+
+## Comandos Operacionais
+
+```bash
+docker compose ps
+docker compose logs -f backend
+docker compose logs -f frontend
+docker compose restart
+docker compose pull
 docker compose up -d --build
 ```
 
-4. Open:
+Healthcheck:
 
-```text
-http://localhost:8080
-http://<tailscale-hostname>:8080
-http://<tailscale-hostname>.<tailnet>.ts.net:8080
+```bash
+curl http://localhost:${WEB_PORT:-80}/api/health
 ```
 
-The frontend uses relative `/api/...` URLs by default, so the same build works from localhost, LAN, and Tailscale MagicDNS.
+Backup do SQLite:
 
-## Tailscale Notes
+```bash
+./scripts/backup-sqlite.sh
+```
 
-No public ports are needed. Bind the web container to `WEB_PORT` and access it over the tailnet:
+Os arquivos ficam em `backups/`. Copie essa pasta para fora da VPS periodicamente.
+
+## HTTPS e Domínio
+
+Para ficar online com domínio, aponte o DNS para o IP da VPS:
+
+```text
+A     @      <ip-da-vps>
+A     www    <ip-da-vps>
+```
+
+Depois habilite HTTPS usando Cloudflare, Hostinger proxy/SSL, Caddy, Nginx Proxy Manager ou outro proxy reverso. Se o proxy reverso ficar na mesma VPS, deixe este app em `WEB_PORT=8080` e faça o proxy encaminhar para `http://127.0.0.1:8080`.
+
+## Observações sobre Tailscale
+
+Não é necessário abrir portas públicas. Vincule o container web a `WEB_PORT` e acesse pelo tailnet:
 
 ```env
 WEB_PORT=8080
 ```
 
-If a client also uses WireGuard full-tunnel, make sure the Tailscale CGNAT range goes through `tailscale0`, not the WireGuard tunnel:
+Se algum cliente também usa WireGuard em full-tunnel, confirme que o intervalo CGNAT do Tailscale passa por `tailscale0`, não pelo túnel WireGuard:
 
 ```bash
 ip route get 100.64.0.1
 ```
 
-The route should use `tailscale0`. If it uses `wg0`, add a more specific route for `100.64.0.0/10` via `tailscale0` in that client's routing table.
+A rota deve usar `tailscale0`. Se usar `wg0`, adicione uma rota mais específica para `100.64.0.0/10` via `tailscale0` na tabela de rotas desse cliente.
 
 ## Healthcheck
 
 Backend:
 
 ```bash
-curl http://localhost:8080/api/health
+curl http://localhost:${WEB_PORT:-80}/api/health
 ```
 
-Docker Compose also uses `/api/health` for backend readiness before exposing the frontend.
+O Docker Compose também usa `/api/health` para verificar se o backend está pronto antes de expor o frontend.

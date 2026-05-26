@@ -31,7 +31,7 @@ export default function Login() {
           const response = await authApi.requestOtp(email);
           setOtpRequested(true);
           setDevCode(response.devCode || '');
-          setInfo('Te enviamos un código OTP al correo. Introdúcelo para crear la cuenta.');
+          setInfo('Enviamos um código OTP para o seu e-mail. Informe-o para criar a conta.');
           return;
         }
 
@@ -41,7 +41,7 @@ export default function Login() {
       }
       navigate('/');
     } catch (err: any) {
-      setError(err.message || 'Error en la operación');
+      setError(err.message || 'Erro na operação');
     } finally {
       setLoading(false);
     }
@@ -63,7 +63,7 @@ export default function Login() {
           <div className="text-center mb-8">
             {companyLogoUrl && <img src={companyLogoUrl} alt={companyName} className="w-14 h-14 object-contain mx-auto mb-3" />}
             <h1 className="text-2xl font-bold text-slate-800">{companyName}</h1>
-            <p className="text-slate-500">{isRegister ? 'Crear cuenta' : 'Iniciar sesión'}</p>
+            <p className="text-slate-500">{isRegister ? 'Criar conta' : 'Entrar'}</p>
             <p className="text-xs text-slate-400 mt-2">{companyObjective}</p>
           </div>
 
@@ -83,7 +83,7 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {isRegister && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
                 <input
                   type="text"
                   value={name}
@@ -95,7 +95,7 @@ export default function Login() {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
               <input
                 type="email"
                 value={email}
@@ -106,7 +106,7 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
               <input
                 type="password"
                 value={password}
@@ -137,7 +137,7 @@ export default function Login() {
               disabled={loading}
               className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
             >
-              {loading ? 'Cargando...' : isRegister ? otpRequested ? 'Crear cuenta' : 'Enviar código OTP' : 'Iniciar sesión'}
+              {loading ? 'Carregando...' : isRegister ? otpRequested ? 'Criar conta' : 'Enviar código OTP' : 'Entrar'}
             </button>
           </form>
 
@@ -151,12 +151,12 @@ export default function Login() {
           )}
 
           <p className="text-center mt-6 text-sm text-gray-600">
-            {isRegister ? '¿Ya tienes cuenta?' : '¿No tienes cuenta?'}{' '}
+            {isRegister ? 'Já tem uma conta?' : 'Não tem uma conta?'}{' '}
             <button
               onClick={toggleMode}
               className="text-blue-600 hover:underline"
             >
-              {isRegister ? 'Iniciar sesión' : 'Registrarse'}
+              {isRegister ? 'Entrar' : 'Cadastrar-se'}
             </button>
           </p>
         </div>

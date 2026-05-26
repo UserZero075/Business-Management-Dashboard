@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useCompany } from '../hooks/useCompany';
 import { Avatar } from '../utils/userVisuals';
+import { roleLabel } from '../utils/labels';
 import {
   LayoutDashboard, FolderKanban, Server, Wallet,
   CheckSquare, BarChart3, Users, LogOut, Bell, Menu, MessageSquare, UserCircle, Moon, Sun, Settings
@@ -10,16 +11,16 @@ import {
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/projects', icon: FolderKanban, label: 'Proyectos' },
-  { to: '/infrastructure', icon: Server, label: 'Infraestructura' },
-  { to: '/finances', icon: Wallet, label: 'Finanzas' },
-  { to: '/tasks', icon: CheckSquare, label: 'Tareas' },
-  { to: '/team', icon: Users, label: 'Equipo' },
+  { to: '/projects', icon: FolderKanban, label: 'Projetos' },
+  { to: '/infrastructure', icon: Server, label: 'Infraestrutura' },
+  { to: '/finances', icon: Wallet, label: 'Finanças' },
+  { to: '/tasks', icon: CheckSquare, label: 'Tarefas' },
+  { to: '/team', icon: Users, label: 'Equipe' },
   { to: '/chat', icon: MessageSquare, label: 'Chat' },
-  { to: '/notifications', icon: Bell, label: 'Notificaciones' },
-  { to: '/profile', icon: UserCircle, label: 'Mi perfil' },
+  { to: '/notifications', icon: Bell, label: 'Notificações' },
+  { to: '/profile', icon: UserCircle, label: 'Meu perfil' },
   { to: '/settings', icon: Settings, label: 'Empresa' },
-  { to: '/reports', icon: BarChart3, label: 'Reportes' },
+  { to: '/reports', icon: BarChart3, label: 'Relatórios' },
 ];
 
 export default function Layout() {
@@ -46,7 +47,7 @@ export default function Layout() {
             {companyLogoUrl && <img src={companyLogoUrl} alt={companyName} className="w-9 h-9 object-contain rounded-lg bg-white/10" />}
             <div className="min-w-0">
               <h1 className="text-xl font-bold text-blue-400 truncate">{companyName}</h1>
-              <p className="text-xs text-slate-400">Manager</p>
+              <p className="text-xs text-slate-400">Gestão</p>
             </div>
           </div>
         </div>
@@ -76,7 +77,7 @@ export default function Layout() {
             <Avatar user={user} size={40} />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">{user?.name}</p>
-              <p className="text-xs text-slate-400">{user?.role}</p>
+              <p className="text-xs text-slate-400">{roleLabel(user?.role)}</p>
             </div>
           </div>
           <button
@@ -84,7 +85,7 @@ export default function Layout() {
             className="flex items-center gap-2 text-sm text-slate-400 hover:text-white w-full"
           >
             <LogOut size={16} />
-            Cerrar sesión
+            Sair
           </button>
         </div>
       </aside>
@@ -98,7 +99,7 @@ export default function Layout() {
 
       {mobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
-          <button className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} aria-label="Cerrar menú" />
+          <button className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} aria-label="Fechar menu" />
           <div className="relative h-full">
             {sidebar}
           </div>
@@ -112,11 +113,11 @@ export default function Layout() {
               <Menu size={22} />
             </button>
           <h2 className="text-sm sm:text-lg font-semibold text-gray-800 truncate">
-            {new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            {new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </h2>
           </div>
           <div className="flex items-center gap-4">
-            <button onClick={() => setDarkMode(!darkMode)} className="p-2 text-gray-500 hover:text-gray-700 relative" title="Cambiar tema">
+            <button onClick={() => setDarkMode(!darkMode)} className="p-2 text-gray-500 hover:text-gray-700 relative" title="Alternar tema">
               {darkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
             <button onClick={() => navigate('/notifications')} className="p-2 text-gray-500 hover:text-gray-700 relative">

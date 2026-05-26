@@ -60,7 +60,7 @@ export default async function financeRoutes(fastify: FastifyInstance) {
       action: 'finance.transaction.create',
       entityType: 'FinancialTransaction',
       entityId: transaction.id,
-      message: `${data.type === 'INCOME' ? 'Registró ingreso' : 'Registró gasto'} de ${data.amount} ${data.currency}`,
+      message: `${data.type === 'INCOME' ? 'Registrou receita' : 'Registrou despesa'} de ${data.amount} ${data.currency}`,
       metadata: { projectId: data.projectId, amountCup }
     });
 
@@ -115,7 +115,7 @@ export default async function financeRoutes(fastify: FastifyInstance) {
         });
         return {
           projectId: b.projectId,
-          projectName: projectMap[b.projectId!] || 'Unknown',
+          projectName: projectMap[b.projectId!] || 'Desconhecido',
           income: Number(income._sum.amountCup || 0),
           expense: Number(expense._sum.amountCup || 0),
           profit: Number(income._sum.amountCup || 0) - Number(expense._sum.amountCup || 0)

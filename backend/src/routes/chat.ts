@@ -79,7 +79,7 @@ export default async function chatRoutes(fastify: FastifyInstance) {
 
         const participant = await fastify.prisma.chatParticipant.findUnique({ where: { channelId_userId: { channelId, userId } } });
         if (!participant) {
-          connection.socket.send(JSON.stringify({ type: 'error', message: 'No perteneces a ese canal' }));
+          connection.socket.send(JSON.stringify({ type: 'error', message: 'Você não pertence a esse canal' }));
           return;
         }
 
@@ -90,7 +90,7 @@ export default async function chatRoutes(fastify: FastifyInstance) {
 
         await broadcastToChannel(fastify, channelId, { type: 'new_message', channelId, message: created });
       } catch (error) {
-        connection.socket.send(JSON.stringify({ type: 'error', message: 'Mensaje inválido' }));
+        connection.socket.send(JSON.stringify({ type: 'error', message: 'Mensagem inválida' }));
       }
     });
   });
@@ -112,7 +112,7 @@ export default async function chatRoutes(fastify: FastifyInstance) {
   fastify.post('/private', { preHandler: [fastify.authenticate] }, async (request: FastifyRequest, reply: FastifyReply) => {
     const currentUserId = (request.user as any).id;
     const { userId } = request.body as { userId: number };
-    if (!userId || userId === currentUserId) return reply.status(400).send({ error: 'Invalid private user' });
+    if (!userId || userId === currentUserId) return reply.status(400).send({ error: 'Usuário privado inválido' });
 
     const channels = await fastify.prisma.chatChannel.findMany({
       where: { type: 'PRIVATE', participants: { some: { userId: currentUserId } } },
@@ -127,7 +127,7 @@ export default async function chatRoutes(fastify: FastifyInstance) {
     const target = await fastify.prisma.user.findUnique({ where: { id: userId } });
     const current = await fastify.prisma.user.findUnique({ where: { id: currentUserId } });
     const channel = await fastify.prisma.chatChannel.create({
-      data: { name: `${current?.name || 'User'} / ${target?.name || 'User'}`, type: 'PRIVATE', createdById: currentUserId }
+      data: { name: `${current?.name || 'Usuário'} / ${target?.name || 'Usuário'}`, type: 'PRIVATE', createdById: currentUserId }
     });
     await fastify.prisma.chatParticipant.createMany({
       data: [{ channelId: channel.id, userId: currentUserId }, { channelId: channel.id, userId }]
@@ -140,7 +140,7 @@ export default async function chatRoutes(fastify: FastifyInstance) {
     const channelId = parseInt(request.params.id);
     const userId = (request.user as any).id;
     const participant = await fastify.prisma.chatParticipant.findUnique({ where: { channelId_userId: { channelId, userId } } });
-    if (!participant) return reply.status(403).send({ error: 'Not a channel participant' });
+    if (!participant) return reply.status(403).send({ error: 'Você não participa deste canal' });
 
     return fastify.prisma.chatMessage.findMany({
       where: { channelId },
@@ -154,10 +154,10 @@ export default async function chatRoutes(fastify: FastifyInstance) {
     const channelId = parseInt(request.params.id);
     const senderId = (request.user as any).id;
     const { content } = request.body as { content: string };
-    if (!content?.trim()) return reply.status(400).send({ error: 'Message is required' });
+    if (!content?.trim()) return reply.status(400).send({ error: 'Mensagem é obrigatória' });
 
     const participant = await fastify.prisma.chatParticipant.findUnique({ where: { channelId_userId: { channelId, userId: senderId } } });
-    if (!participant) return reply.status(403).send({ error: 'Not a channel participant' });
+    if (!participant) return reply.status(403).send({ error: 'Você não participa deste canal' });
 
     const created = await fastify.prisma.chatMessage.create({
       data: { channelId, senderId, content: content.trim() },

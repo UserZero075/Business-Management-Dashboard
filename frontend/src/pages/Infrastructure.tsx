@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { vpsApi, projectApi } from '../api/client';
 import { Plus, Trash2, Server, Database, Globe, Lock, Mail } from 'lucide-react';
+import { billingCycleLabel, infraTypeLabel } from '../utils/labels';
 
 type TabType = 'servers' | 'items' | 'providers' | 'costs';
 
@@ -61,7 +62,7 @@ export default function Infrastructure() {
   };
 
   const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('es-CU', { style: 'currency', currency }).format(amount);
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency }).format(amount);
   };
 
   const getInfraIcon = (type: string) => {
@@ -76,21 +77,21 @@ export default function Infrastructure() {
 
   const tabs = [
     { id: 'servers', label: 'Servidores VPS' },
-    { id: 'items', label: 'Infraestructura' },
-    { id: 'providers', label: 'Proveedores' },
-    { id: 'costs', label: 'Costos' },
+    { id: 'items', label: 'Infraestrutura' },
+    { id: 'providers', label: 'Provedores' },
+    { id: 'costs', label: 'Custos' },
   ] as const;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <h1 className="text-2xl font-bold text-gray-800">Infraestructura</h1>
+        <h1 className="text-2xl font-bold text-gray-800">Infraestrutura</h1>
         <button
           onClick={() => openModal(activeTab === 'providers' ? 'provider' : activeTab === 'servers' ? 'server' : 'item')}
           className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
         >
           <Plus size={20} />
-          Nuevo {activeTab === 'providers' ? 'Proveedor' : activeTab === 'servers' ? 'Servidor' : 'Item'}
+          Novo {activeTab === 'providers' ? 'Provedor' : activeTab === 'servers' ? 'Servidor' : 'Item'}
         </button>
       </div>
 
@@ -127,7 +128,7 @@ export default function Infrastructure() {
 
               <div className="space-y-2 text-sm">
                 {server.ip && <p className="text-gray-600">IP: {server.ip}</p>}
-                <p className="font-medium text-lg">{formatCurrency(server.cost, server.currency)}<span className="text-gray-400 text-sm">/{server.billingCycle}</span></p>
+                <p className="font-medium text-lg">{formatCurrency(server.cost, server.currency)}<span className="text-gray-400 text-sm">/{billingCycleLabel(server.billingCycle)}</span></p>
               </div>
 
               {server.infrastructure?.length > 0 && (
@@ -145,11 +146,11 @@ export default function Infrastructure() {
                 onClick={() => setLinkingItem({ type: 'VPS', id: server.id })}
                 className="mt-4 w-full py-2 border rounded-lg text-sm hover:bg-gray-50"
               >
-                Vincular a Proyecto
+                Vincular a Projeto
               </button>
             </div>
           ))}
-          {(!servers || servers.length === 0) && <p className="col-span-full text-center py-8 text-gray-500">No hay servidores registrados</p>}
+          {(!servers || servers.length === 0) && <p className="col-span-full text-center py-8 text-gray-500">Não há servidores registrados</p>}
         </div>
       )}
 
@@ -166,7 +167,7 @@ export default function Infrastructure() {
                     </div>
                     <div>
                       <h3 className="font-semibold">{item.name}</h3>
-                      <p className="text-xs text-gray-500">{item.type}</p>
+                      <p className="text-xs text-gray-500">{infraTypeLabel(item.type)}</p>
                     </div>
                   </div>
                   <button onClick={() => deleteMutation.item.mutate(item.id)} className="p-2 text-gray-400 hover:text-red-600">
@@ -174,7 +175,7 @@ export default function Infrastructure() {
                   </button>
                 </div>
 
-                <p className="font-medium text-lg">{formatCurrency(item.cost, item.currency)}<span className="text-gray-400 text-sm">/{item.billingCycle}</span></p>
+                <p className="font-medium text-lg">{formatCurrency(item.cost, item.currency)}<span className="text-gray-400 text-sm">/{billingCycleLabel(item.billingCycle)}</span></p>
 
                 {item.projects?.length > 0 && (
                   <div className="mt-4 pt-4 border-t">
@@ -191,12 +192,12 @@ export default function Infrastructure() {
                   onClick={() => setLinkingItem({ type: item.type, id: item.id })}
                   className="mt-4 w-full py-2 border rounded-lg text-sm hover:bg-gray-50"
                 >
-                  Vincular a Proyecto
+                  Vincular a Projeto
                 </button>
               </div>
             );
           })}
-          {(!items || items.length === 0) && <p className="col-span-full text-center py-8 text-gray-500">No hay items de infraestructura</p>}
+          {(!items || items.length === 0) && <p className="col-span-full text-center py-8 text-gray-500">Não há itens de infraestrutura</p>}
         </div>
       )}
 
@@ -205,7 +206,7 @@ export default function Infrastructure() {
           {providers?.map((provider: any) => (
             <div key={provider.id} className="bg-white rounded-xl shadow-sm border p-6">
               <h3 className="font-semibold mb-2">{provider.name}</h3>
-              <p className="text-sm text-gray-500">{provider.type}</p>
+              <p className="text-sm text-gray-500">{infraTypeLabel(provider.type)}</p>
               {provider.website && (
                 <a href={provider.website} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">
                   {provider.website}
@@ -213,16 +214,16 @@ export default function Infrastructure() {
               )}
             </div>
           ))}
-          {(!providers || providers.length === 0) && <p className="col-span-full text-center py-8 text-gray-500">No hay proveedores</p>}
+          {(!providers || providers.length === 0) && <p className="col-span-full text-center py-8 text-gray-500">Não há provedores</p>}
         </div>
       )}
 
       {activeTab === 'costs' && (
         <div className="bg-white rounded-xl shadow-sm border p-6">
-          <h3 className="text-lg font-semibold mb-4">Resumen de Costos Mensuales</h3>
+          <h3 className="text-lg font-semibold mb-4">Resumo de Custos Mensais</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <p className="text-sm text-gray-600">Costo Total Mensual</p>
+              <p className="text-sm text-gray-600">Custo Total Mensal</p>
               <p className="text-2xl font-bold text-blue-600">{formatCurrency(costs?.totalMonthly || 0, 'USD')}</p>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
@@ -230,20 +231,20 @@ export default function Infrastructure() {
               <p className="text-2xl font-bold text-green-600">{costs?.servers?.length || 0}</p>
             </div>
             <div className="text-center p-4 bg-purple-50 rounded-lg">
-              <p className="text-sm text-gray-600">Items de Infraestructura</p>
+              <p className="text-sm text-gray-600">Itens de Infraestrutura</p>
               <p className="text-2xl font-bold text-purple-600">{costs?.items?.length || 0}</p>
             </div>
           </div>
 
           {costs?.byProject && Object.keys(costs.byProject).length > 0 && (
             <>
-              <h4 className="font-medium mb-3">Costo por Proyecto</h4>
+              <h4 className="font-medium mb-3">Custo por Projeto</h4>
               <div className="space-y-2">
                 {Object.entries(costs.byProject).map(([projectId, cost]: [string, any]) => {
                   const project = projects?.find((p: any) => p.id === Number(projectId));
                   return (
                     <div key={projectId} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <span>{project?.name || `Proyecto #${projectId}`}</span>
+                      <span>{project?.name || `Projeto #${projectId}`}</span>
                       <span className="font-medium">{formatCurrency(cost, 'USD')}</span>
                     </div>
                   );
@@ -258,11 +259,11 @@ export default function Infrastructure() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6">
             <h2 className="text-xl font-bold mb-4">
-              Nuevo {modalType === 'server' ? 'Servidor' : modalType === 'item' ? 'Item' : 'Proveedor'}
+              Novo {modalType === 'server' ? 'Servidor' : modalType === 'item' ? 'Item' : 'Provedor'}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
                 <input type="text" value={formData.name || ''} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full px-3 py-2 border rounded-lg" required />
               </div>
 
@@ -271,10 +272,10 @@ export default function Infrastructure() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
                   <select value={formData.type || 'VPS'} onChange={(e) => setFormData({ ...formData, type: e.target.value })} className="w-full px-3 py-2 border rounded-lg">
                     <option value="VPS">VPS</option>
-                    <option value="DOMAIN">Dominio</option>
-                    <option value="EMAIL">Email</option>
-                    <option value="PAYMENT">Pagos</option>
-                    <option value="OTHER">Otro</option>
+                    <option value="DOMAIN">Domínio</option>
+                    <option value="EMAIL">E-mail</option>
+                    <option value="PAYMENT">Pagamentos</option>
+                    <option value="OTHER">Outro</option>
                   </select>
                 </div>
               )}
@@ -282,22 +283,22 @@ export default function Infrastructure() {
               {modalType !== 'provider' && (
                 <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Proveedor</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Provedor</label>
                   <select value={formData.providerId || ''} onChange={(e) => setFormData({ ...formData, providerId: e.target.value ? Number(e.target.value) : undefined })} className="w-full px-3 py-2 border rounded-lg">
-                    <option value="">Sin proveedor / automático</option>
+                    <option value="">Sem provedor / automático</option>
                     {providers?.map((provider: any) => (
-                      <option key={provider.id} value={provider.id}>{provider.name} ({provider.type})</option>
+                      <option key={provider.id} value={provider.id}>{provider.name} ({infraTypeLabel(provider.type)})</option>
                     ))}
                   </select>
-                  <p className="text-xs text-gray-500 mt-1">Si no existe, primero crea uno en la pestaña Proveedores.</p>
+                  <p className="text-xs text-gray-500 mt-1">Se não existir, crie um primeiro na aba Provedores.</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Costo</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Custo</label>
                     <input type="number" step="0.01" value={formData.cost || 0} onChange={(e) => setFormData({ ...formData, cost: Number(e.target.value) })} className="w-full px-3 py-2 border rounded-lg" required />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Moneda</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Moeda</label>
                     <select value={formData.currency || 'USD'} onChange={(e) => setFormData({ ...formData, currency: e.target.value })} className="w-full px-3 py-2 border rounded-lg">
                       <option value="USD">USD</option>
                       <option value="EUR">EUR</option>
@@ -312,7 +313,7 @@ export default function Infrastructure() {
                       <input value={formData.ip || ''} onChange={(e) => setFormData({ ...formData, ip: e.target.value })} className="w-full px-3 py-2 border rounded-lg" placeholder="192.168.1.1" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Specs / Notas técnicas</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Especificações / Notas técnicas</label>
                       <textarea value={formData.specs || ''} onChange={(e) => setFormData({ ...formData, specs: e.target.value })} className="w-full px-3 py-2 border rounded-lg" rows={2} placeholder="2 vCPU, 4GB RAM, Ubuntu..." />
                     </div>
                   </>
@@ -322,22 +323,22 @@ export default function Infrastructure() {
 
               {modalType === 'item' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Infraestructura</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Infraestrutura</label>
                   <select value={formData.type || 'DOMAIN'} onChange={(e) => setFormData({ ...formData, type: e.target.value })} className="w-full px-3 py-2 border rounded-lg">
-                    <option value="DOMAIN">Dominio</option>
-                    <option value="DATABASE">Base de Datos</option>
+                    <option value="DOMAIN">Domínio</option>
+                    <option value="DATABASE">Banco de dados</option>
                     <option value="SSL_CERT">Certificado SSL</option>
                     <option value="CDN">CDN</option>
-                    <option value="EMAIL_SERVICE">Email</option>
+                    <option value="EMAIL_SERVICE">E-mail</option>
                     <option value="API_SERVICE">API</option>
-                    <option value="OTHER">Otro</option>
+                    <option value="OTHER">Outro</option>
                   </select>
                 </div>
               )}
 
               <div className="flex gap-3 pt-4">
                 <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50">Cancelar</button>
-                <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Guardar</button>
+                <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Salvar</button>
               </div>
             </form>
           </div>
@@ -347,8 +348,8 @@ export default function Infrastructure() {
       {linkingItem && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6">
-            <h2 className="text-xl font-bold mb-4">Vincular a Proyecto</h2>
-            <p className="text-sm text-gray-600 mb-4">Selecciona el proyecto que usará esta infraestructura</p>
+            <h2 className="text-xl font-bold mb-4">Vincular a Projeto</h2>
+            <p className="text-sm text-gray-600 mb-4">Selecione o projeto que usará esta infraestrutura</p>
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {projects?.map((project: any) => (
                 <button

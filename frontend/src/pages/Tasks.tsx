@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { taskApi, projectApi, authApi } from '../api/client';
 import { Plus, CheckCircle, Clock, AlertTriangle, Bug, ListTodo, Pencil, Trash2 } from 'lucide-react';
 import { Avatar } from '../utils/userVisuals';
+import { priorityLabel, severityLabel, statusLabel } from '../utils/labels';
 
 type TabType = 'tasks' | 'bugs' | 'overview';
 
@@ -108,22 +109,22 @@ export default function Tasks() {
   };
 
   const tabs = [
-    { id: 'tasks', label: 'Tareas', icon: ListTodo },
+    { id: 'tasks', label: 'Tarefas', icon: ListTodo },
     { id: 'bugs', label: 'Bugs', icon: Bug },
-    { id: 'overview', label: 'Resumen', icon: AlertTriangle },
+    { id: 'overview', label: 'Resumo', icon: AlertTriangle },
   ] as const;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-        <h1 className="text-2xl font-bold text-gray-800">Tareas y Bugs</h1>
+        <h1 className="text-2xl font-bold text-gray-800">Tarefas e Bugs</h1>
         <div className="flex flex-col sm:flex-row gap-2">
           <select value={filterProject} onChange={(e) => setFilterProject(e.target.value ? Number(e.target.value) : '')} className="px-3 py-2 border rounded-lg">
-            <option value="">Todos los proyectos</option>
+            <option value="">Todos os projetos</option>
             {projects?.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
           <button onClick={() => openModal('task')} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-            <Plus size={20} /> Nueva Tarea
+            <Plus size={20} /> Nova Tarefa
           </button>
           <button onClick={() => openModal('bug')} className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">
             <Plus size={20} /> Reportar Bug
@@ -133,15 +134,15 @@ export default function Tasks() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl shadow-sm border p-4">
-          <p className="text-sm text-gray-500">Tareas Totales</p>
+          <p className="text-sm text-gray-500">Tarefas Totais</p>
           <p className="text-2xl font-bold">{overview?.tasks?.total || 0}</p>
         </div>
         <div className="bg-white rounded-xl shadow-sm border p-4">
-          <p className="text-sm text-gray-500">Completadas</p>
+          <p className="text-sm text-gray-500">Concluídas</p>
           <p className="text-2xl font-bold text-green-600">{overview?.tasks?.completed || 0}</p>
         </div>
         <div className="bg-white rounded-xl shadow-sm border p-4">
-          <p className="text-sm text-gray-500">Bugs Abiertos</p>
+          <p className="text-sm text-gray-500">Bugs Abertos</p>
           <p className="text-2xl font-bold text-red-600">{overview?.bugs?.open || 0}</p>
         </div>
         <div className="bg-white rounded-xl shadow-sm border p-4">
@@ -173,7 +174,7 @@ export default function Tasks() {
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className={`px-2 py-0.5 rounded text-xs font-medium ${task.priority === 'high' ? 'bg-red-100 text-red-700' : task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700'}`}>
-                    {task.priority}
+                    {priorityLabel(task.priority)}
                   </span>
                   <h3 className={`font-medium ${task.status === 'COMPLETED' ? 'line-through text-gray-400' : ''}`}>{task.title}</h3>
                 </div>
@@ -181,34 +182,34 @@ export default function Tasks() {
                 <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500 mt-2">
                   {task.creator && (
                     <Link to={`/users/${task.creator.id}`} className="inline-flex items-center gap-2 hover:text-blue-600">
-                      <Avatar user={task.creator} size={22} /> Creada por {task.creator.name}
+                      <Avatar user={task.creator} size={22} /> Criada por {task.creator.name}
                     </Link>
                   )}
                   {task.assignee ? (
                     <Link to={`/users/${task.assignee.id}`} className="inline-flex items-center gap-2 hover:text-blue-600">
-                      <Avatar user={task.assignee} size={22} /> Asignada a {task.assignee.name}
+                      <Avatar user={task.assignee} size={22} /> Atribuída a {task.assignee.name}
                     </Link>
-                  ) : <span>Sin asignar</span>}
+                  ) : <span>Sem responsável</span>}
                 </div>
                 {task.description && <p className="text-sm text-gray-600 mt-2 whitespace-pre-wrap">{task.description}</p>}
               </div>
               <div className="flex items-center gap-2 self-end sm:self-auto">
-              <button onClick={() => openEditModal('task', task)} className="p-2 text-gray-400 hover:text-blue-600" title="Ver/editar tarea"><Pencil size={16} /></button>
-              <button onClick={() => deleteTaskMutation.mutate(task.id)} className="p-2 text-gray-400 hover:text-red-600" title="Eliminar tarea"><Trash2 size={16} /></button>
+              <button onClick={() => openEditModal('task', task)} className="p-2 text-gray-400 hover:text-blue-600" title="Ver/editar tarefa"><Pencil size={16} /></button>
+              <button onClick={() => deleteTaskMutation.mutate(task.id)} className="p-2 text-gray-400 hover:text-red-600" title="Excluir tarefa"><Trash2 size={16} /></button>
               <select
                 value={task.status}
                 onChange={(e) => updateTaskMutation.mutate({ id: task.id, data: { status: e.target.value } })}
                 className="px-2 py-1 border rounded text-sm"
               >
-                <option value="PENDING">Pendiente</option>
-                <option value="IN_PROGRESS">En progreso</option>
-                <option value="COMPLETED">Completada</option>
+                <option value="PENDING">Pendente</option>
+                <option value="IN_PROGRESS">Em progresso</option>
+                <option value="COMPLETED">Concluída</option>
                 <option value="CANCELLED">Cancelada</option>
               </select>
               </div>
             </div>
           ))}
-          {(!tasks || tasks.length === 0) && <p className="text-center py-8 text-gray-500">No hay tareas</p>}
+          {(!tasks || tasks.length === 0) && <p className="text-center py-8 text-gray-500">Não há tarefas</p>}
         </div>
       )}
 
@@ -220,10 +221,10 @@ export default function Tasks() {
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className={`px-2 py-0.5 rounded text-xs font-medium ${severityColors[bug.severity] || severityColors.medium}`}>
-                    {bug.severity}
+                    {severityLabel(bug.severity)}
                   </span>
                   <span className={`px-2 py-0.5 rounded text-xs ${bug.status === 'OPEN' ? 'bg-red-100 text-red-700' : bug.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
-                    {bug.status}
+                    {statusLabel(bug.status)}
                   </span>
                   <h3 className="font-medium">{bug.title}</h3>
                 </div>
@@ -237,28 +238,28 @@ export default function Tasks() {
               </div>
               <div className="flex items-center gap-2 self-end sm:self-auto">
               <button onClick={() => openEditModal('bug', bug)} className="p-2 text-gray-400 hover:text-blue-600" title="Ver/editar bug"><Pencil size={16} /></button>
-              <button onClick={() => deleteBugMutation.mutate(bug.id)} className="p-2 text-gray-400 hover:text-red-600" title="Eliminar bug"><Trash2 size={16} /></button>
+              <button onClick={() => deleteBugMutation.mutate(bug.id)} className="p-2 text-gray-400 hover:text-red-600" title="Excluir bug"><Trash2 size={16} /></button>
               <select
                 value={bug.status}
                 onChange={(e) => updateBugMutation.mutate({ id: bug.id, data: { status: e.target.value } })}
                 className="px-2 py-1 border rounded text-sm"
               >
-                <option value="OPEN">Abierto</option>
-                <option value="IN_PROGRESS">En progreso</option>
-                <option value="RESOLVED">Resuelto</option>
-                <option value="CLOSED">Cerrado</option>
+                <option value="OPEN">Aberto</option>
+                <option value="IN_PROGRESS">Em progresso</option>
+                <option value="RESOLVED">Resolvido</option>
+                <option value="CLOSED">Fechado</option>
               </select>
               </div>
             </div>
           ))}
-          {(!bugs || bugs.length === 0) && <p className="text-center py-8 text-gray-500">No hay bugs reportados</p>}
+          {(!bugs || bugs.length === 0) && <p className="text-center py-8 text-gray-500">Não há bugs reportados</p>}
         </div>
       )}
 
       {activeTab === 'overview' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white rounded-xl shadow-sm border p-6">
-            <h3 className="text-lg font-semibold mb-4">Tareas por Proyecto</h3>
+            <h3 className="text-lg font-semibold mb-4">Tarefas por Projeto</h3>
             {overview?.byProject?.map((item: any) => (
               <div key={item.projectId} className="flex items-center justify-between py-2 border-b">
                 <span>{item.projectName}</span>
@@ -267,7 +268,7 @@ export default function Tasks() {
             ))}
           </div>
           <div className="bg-white rounded-xl shadow-sm border p-6">
-            <h3 className="text-lg font-semibold mb-4">Bugs por Proyecto</h3>
+            <h3 className="text-lg font-semibold mb-4">Bugs por Projeto</h3>
             {overview?.byProject?.map((item: any) => (
               <div key={item.projectId} className="flex items-center justify-between py-2 border-b">
                 <span>{item.projectName}</span>
@@ -281,12 +282,12 @@ export default function Tasks() {
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6">
-            <h2 className="text-xl font-bold mb-4">{editingItem ? 'Editar' : modalType === 'task' ? 'Nueva Tarea' : 'Reportar Bug'}</h2>
+            <h2 className="text-xl font-bold mb-4">{editingItem ? 'Editar' : modalType === 'task' ? 'Nova Tarefa' : 'Reportar Bug'}</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Proyecto</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Projeto</label>
                 <select value={formData.projectId || ''} onChange={(e) => setFormData({ ...formData, projectId: Number(e.target.value) })} className="w-full px-3 py-2 border rounded-lg" required>
-                  <option value="">Seleccionar proyecto</option>
+                  <option value="">Selecionar projeto</option>
                   {projects?.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
               </div>
@@ -297,25 +298,25 @@ export default function Tasks() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
                 <textarea value={formData.description || ''} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="w-full px-3 py-2 border rounded-lg" rows={3} />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{modalType === 'task' ? 'Prioridad' : 'Severidad'}</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{modalType === 'task' ? 'Prioridade' : 'Severidade'}</label>
                   <select value={formData[modalType === 'task' ? 'priority' : 'severity'] || 'medium'} onChange={(e) => setFormData({ ...formData, [modalType === 'task' ? 'priority' : 'severity']: e.target.value })} className="w-full px-3 py-2 border rounded-lg">
-                    <option value="low">Baja</option>
-                    <option value="medium">Media</option>
+                    <option value="low">Baixa</option>
+                    <option value="medium">Média</option>
                     <option value="high">Alta</option>
                     {modalType === 'bug' && <option value="critical">Crítica</option>}
                   </select>
                 </div>
                 {modalType === 'task' && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Asignar a</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Atribuir a</label>
                     <select value={formData.assigneeId || ''} onChange={(e) => setFormData({ ...formData, assigneeId: e.target.value ? Number(e.target.value) : null })} className="w-full px-3 py-2 border rounded-lg">
-                      <option value="">Sin asignar</option>
+                      <option value="">Sem responsável</option>
                       {users?.map((u: any) => <option key={u.id} value={u.id}>{u.name}</option>)}
                     </select>
                   </div>
@@ -324,7 +325,7 @@ export default function Tasks() {
 
               <div className="flex gap-3 pt-4">
                 <button type="button" onClick={() => { setShowModal(false); setEditingItem(null); }} className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50">Cancelar</button>
-                <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Guardar</button>
+                <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Salvar</button>
               </div>
             </form>
           </div>

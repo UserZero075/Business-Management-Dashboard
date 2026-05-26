@@ -124,8 +124,8 @@ export default async function dashboardRoutes(fastify: FastifyInstance) {
     if (orphanedVps.length > 0) {
       alerts.push({
         type: 'warning',
-        title: 'VPS sin proyecto asignado',
-        message: `${orphanedVps.length} VPS no están vinculados a ningún proyecto`,
+        title: 'VPS sem projeto atribuído',
+        message: `${orphanedVps.length} VPS não estão vinculados a nenhum projeto`,
         count: orphanedVps.length
       });
     }
@@ -136,8 +136,8 @@ export default async function dashboardRoutes(fastify: FastifyInstance) {
     if (orphanedInfra.length > 0) {
       alerts.push({
         type: 'warning',
-        title: 'Infraestructura sin proyecto',
-        message: `${orphanedInfra.length} items de infraestructura no están vinculados a ningún proyecto`,
+        title: 'Infraestrutura sem projeto',
+        message: `${orphanedInfra.length} itens de infraestrutura não estão vinculados a nenhum projeto`,
         count: orphanedInfra.length
       });
     }
@@ -149,8 +149,8 @@ export default async function dashboardRoutes(fastify: FastifyInstance) {
     if (noIncome.length > 0) {
       alerts.push({
         type: 'info',
-        title: 'Proyectos sin ingresos',
-        message: `${noIncome.length} proyectos activos no tienen registros de ingresos`,
+        title: 'Projetos sem receitas',
+        message: `${noIncome.length} projetos ativos não têm registros de receitas`,
         count: noIncome.length
       });
     }
@@ -161,8 +161,8 @@ export default async function dashboardRoutes(fastify: FastifyInstance) {
     if (criticalBugs > 0) {
       alerts.push({
         type: 'error',
-        title: 'Bugs críticos abiertos',
-        message: `${criticalBugs} bugs con severidad crítica requieren atención inmediata`,
+        title: 'Bugs críticos abertos',
+        message: `${criticalBugs} bugs com severidade crítica exigem atenção imediata`,
         count: criticalBugs
       });
     }
@@ -176,8 +176,8 @@ export default async function dashboardRoutes(fastify: FastifyInstance) {
     if (overdueTasks > 0) {
       alerts.push({
         type: 'warning',
-        title: 'Tareas vencidas',
-        message: `${overdueTasks} tareas tienen fecha de vencimiento pasada`,
+        title: 'Tarefas vencidas',
+        message: `${overdueTasks} tarefas estão com prazo vencido`,
         count: overdueTasks
       });
     }
@@ -190,8 +190,8 @@ export default async function dashboardRoutes(fastify: FastifyInstance) {
       const result = await fetchElToqueRates(fastify.prisma);
       return { success: true, ...result };
     } catch (error: any) {
-      console.error('Error fetching exchange rates:', error);
-      return reply.status(500).send({ error: 'Failed to parse exchange rates', details: error.message });
+      console.error('Erro ao buscar taxas de câmbio:', error);
+      return reply.status(500).send({ error: 'Falha ao processar taxas de câmbio', details: error.message });
     }
   });
 

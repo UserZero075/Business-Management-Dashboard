@@ -2,9 +2,9 @@ import { PrismaClient } from '@prisma/client';
 import * as cheerio from 'cheerio';
 
 const CURRENCY_META: Record<string, { name: string; symbol: string }> = {
-  USD: { name: 'Dolar estadounidense', symbol: '$' },
+  USD: { name: 'Dólar americano', symbol: '$' },
   EUR: { name: 'Euro', symbol: 'EUR' },
-  MLC: { name: 'Moneda libremente convertible', symbol: 'MLC' },
+  MLC: { name: 'Moeda livremente conversível', symbol: 'MLC' },
   USDT: { name: 'Tether', symbol: 'USDT' },
 };
 
@@ -44,7 +44,7 @@ export async function fetchElToqueRates(prisma: PrismaClient) {
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch from El Toque: ${response.status}`);
+    throw new Error(`Falha ao buscar dados no El Toque: ${response.status}`);
   }
 
   const rates = extractRates(await response.text());
@@ -76,9 +76,9 @@ export function scheduleElToqueRates(prisma: PrismaClient, logger: { info: (data
   const refresh = async () => {
     try {
       const result = await fetchElToqueRates(prisma);
-      logger.info(result, 'Exchange rates refreshed from El Toque');
+      logger.info(result, 'Taxas de câmbio atualizadas pelo El Toque');
     } catch (error) {
-      logger.error(error, 'Failed to refresh exchange rates from El Toque');
+      logger.error(error, 'Falha ao atualizar taxas de câmbio pelo El Toque');
     }
   };
 

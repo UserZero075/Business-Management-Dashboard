@@ -3,6 +3,7 @@ import { dashboardApi, financeApi } from '../api/client';
 import { TrendingUp, TrendingDown, Server, Users, AlertTriangle, CheckCircle, DollarSign } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useCompany } from '../hooks/useCompany';
+import { statusLabel } from '../utils/labels';
 
 export default function Dashboard() {
   const { companyName } = useCompany();
@@ -32,7 +33,7 @@ export default function Dashboard() {
   });
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('es-CU', { style: 'currency', currency: 'CUP' }).format(value);
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'CUP' }).format(value);
   };
 
   const alertClass = (type: string) => {
@@ -46,7 +47,7 @@ export default function Dashboard() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
         <div className="text-sm text-gray-500">
-          {companyName} Manager
+          Gestão {companyName}
         </div>
       </div>
 
@@ -71,7 +72,7 @@ export default function Dashboard() {
         <div className="bg-white rounded-xl shadow-sm p-6 border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Ingresos Totales</p>
+              <p className="text-sm text-gray-500">Receitas Totais</p>
               <p className="text-2xl font-bold text-green-600">
                 {formatCurrency(overview?.finances?.totalIncome || 0)}
               </p>
@@ -85,7 +86,7 @@ export default function Dashboard() {
         <div className="bg-white rounded-xl shadow-sm p-6 border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Gastos Totales</p>
+              <p className="text-sm text-gray-500">Despesas Totais</p>
               <p className="text-2xl font-bold text-red-600">
                 {formatCurrency(overview?.finances?.totalExpense || 0)}
               </p>
@@ -99,7 +100,7 @@ export default function Dashboard() {
         <div className="bg-white rounded-xl shadow-sm p-6 border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Beneficio Neto</p>
+              <p className="text-sm text-gray-500">Resultado Líquido</p>
               <p className={`text-2xl font-bold ${(overview?.finances?.profit || 0) >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
                 {formatCurrency(overview?.finances?.profit || 0)}
               </p>
@@ -113,7 +114,7 @@ export default function Dashboard() {
         <div className="bg-white rounded-xl shadow-sm p-6 border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Proyectos Activos</p>
+              <p className="text-sm text-gray-500">Projetos Ativos</p>
               <p className="text-2xl font-bold text-gray-800">
                 {overview?.overview?.activeProjects || 0} / {overview?.overview?.totalProjects || 0}
               </p>
@@ -129,13 +130,13 @@ export default function Dashboard() {
         <div className="bg-white rounded-xl shadow-sm p-6 border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Usuarios Totales</p>
+              <p className="text-sm text-gray-500">Usuários Totais</p>
               <p className="text-2xl font-bold text-gray-800">{overview?.users?.total || 0}</p>
               <p className="text-xs text-gray-500 mt-1">
-                {overview?.users?.active || 0} activos · {overview?.users?.paid || 0} pagan
+                {overview?.users?.active || 0} ativos · {overview?.users?.paid || 0} pagantes
               </p>
               <p className="text-xs text-gray-500">
-                {overview?.users?.referral || 0} referidos · {overview?.users?.free || 0} gratis · {overview?.users?.collaboration || 0} colab.
+                {overview?.users?.referral || 0} indicados · {overview?.users?.free || 0} gratuitos · {overview?.users?.collaboration || 0} colab.
               </p>
             </div>
             <div className="p-3 bg-indigo-100 rounded-lg">
@@ -159,7 +160,7 @@ export default function Dashboard() {
         <div className="bg-white rounded-xl shadow-sm p-6 border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Este Mes</p>
+              <p className="text-sm text-gray-500">Este Mês</p>
               <p className={`text-2xl font-bold ${(overview?.finances?.monthProfit || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {formatCurrency(overview?.finances?.monthProfit || 0)}
               </p>
@@ -170,7 +171,7 @@ export default function Dashboard() {
         <div className="bg-white rounded-xl shadow-sm p-6 border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Bugs Abiertos</p>
+              <p className="text-sm text-gray-500">Bugs Abertos</p>
               <p className="text-2xl font-bold text-orange-600">{overview?.work?.openBugs || 0}</p>
             </div>
           </div>
@@ -179,7 +180,7 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-sm p-6 border">
-          <h3 className="text-lg font-semibold mb-4">Ingresos vs Gastos</h3>
+          <h3 className="text-lg font-semibold mb-4">Receitas vs Despesas</h3>
           {chartData && chartData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={chartData}>
@@ -187,17 +188,17 @@ export default function Dashboard() {
                 <XAxis dataKey="month" />
                 <YAxis />
                 <Tooltip formatter={(value: any) => formatCurrency(Number(value) || 0)} />
-                <Bar dataKey="income" fill="#22c55e" name="Ingresos" />
-                <Bar dataKey="expense" fill="#ef4444" name="Gastos" />
+                <Bar dataKey="income" fill="#22c55e" name="Receitas" />
+                <Bar dataKey="expense" fill="#ef4444" name="Despesas" />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <p className="text-gray-500 text-center py-8">No hay datos disponibles</p>
+            <p className="text-gray-500 text-center py-8">Não há dados disponíveis</p>
           )}
         </div>
 
         <div className="bg-white rounded-xl shadow-sm p-6 border">
-          <h3 className="text-lg font-semibold mb-4">Tasas de Cambio (CUP)</h3>
+          <h3 className="text-lg font-semibold mb-4">Taxas de Câmbio (CUP)</h3>
           <div className="space-y-3">
             {rates ? (
               Object.entries(rates).map(([code, data]: [string, any]) => (
@@ -210,24 +211,24 @@ export default function Dashboard() {
                 </div>
               ))
             ) : (
-              <p className="text-gray-500 text-center py-4">Cargando tasas...</p>
+              <p className="text-gray-500 text-center py-4">Carregando taxas...</p>
             )}
           </div>
         </div>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm p-6 border">
-        <h3 className="text-lg font-semibold mb-4">Resumen de Proyectos</h3>
+        <h3 className="text-lg font-semibold mb-4">Resumo de Projetos</h3>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b">
-                <th className="text-left py-3 px-4 font-medium text-gray-600">Proyecto</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-600">Projeto</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-600">Estado</th>
-                <th className="text-right py-3 px-4 font-medium text-gray-600">Ingresos</th>
-                <th className="text-right py-3 px-4 font-medium text-gray-600">Gastos</th>
-                <th className="text-right py-3 px-4 font-medium text-gray-600">Beneficio</th>
-                <th className="text-right py-3 px-4 font-medium text-gray-600">Usuarios</th>
+                <th className="text-right py-3 px-4 font-medium text-gray-600">Receitas</th>
+                <th className="text-right py-3 px-4 font-medium text-gray-600">Despesas</th>
+                <th className="text-right py-3 px-4 font-medium text-gray-600">Resultado</th>
+                <th className="text-right py-3 px-4 font-medium text-gray-600">Usuários</th>
               </tr>
             </thead>
             <tbody>
@@ -241,7 +242,7 @@ export default function Dashboard() {
                       project.status === 'PAUSED' ? 'bg-yellow-100 text-yellow-700' :
                       'bg-gray-100 text-gray-700'
                     }`}>
-                      {project.status}
+                      {statusLabel(project.status)}
                     </span>
                   </td>
                   <td className="py-3 px-4 text-right text-green-600">{formatCurrency(project.income)}</td>
@@ -255,7 +256,7 @@ export default function Dashboard() {
               {(!projectsOverview || projectsOverview.length === 0) && (
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-gray-500">
-                    No hay proyectos registrados
+                    Não há projetos registrados
                   </td>
                 </tr>
               )}

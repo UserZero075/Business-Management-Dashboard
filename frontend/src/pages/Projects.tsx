@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { projectApi, authApi } from '../api/client';
 import { Plus, Pencil, Trash2, Users, ExternalLink, UserCheck } from 'lucide-react';
+import { statusLabel } from '../utils/labels';
 
 export default function Projects() {
   const [showModal, setShowModal] = useState(false);
@@ -76,18 +77,18 @@ export default function Projects() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-800">Proyectos</h1>
+        <h1 className="text-2xl font-bold text-gray-800">Projetos</h1>
         <button
           onClick={() => { resetForm(); setShowModal(true); }}
           className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
         >
           <Plus size={20} />
-          Nuevo Proyecto
+          Novo Projeto
         </button>
       </div>
 
       {isLoading ? (
-        <div className="text-center py-8">Cargando...</div>
+        <div className="text-center py-8">Carregando...</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {projects?.map((project: any) => (
@@ -96,11 +97,11 @@ export default function Projects() {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-800">{project.name}</h3>
                   <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${statusColors[project.status]}`}>
-                    {project.status}
+                    {statusLabel(project.status)}
                   </span>
                 </div>
                 <div className="flex gap-1">
-                  <button onClick={() => navigate(`/projects/${project.id}/manager`)} className="p-2 text-gray-400 hover:text-blue-600" title="Abrir manager del proyecto">
+                  <button onClick={() => navigate(`/projects/${project.id}/manager`)} className="p-2 text-gray-400 hover:text-blue-600" title="Abrir gestão do projeto">
                     <Pencil size={18} />
                   </button>
                   <button onClick={() => deleteMutation.mutate(project.id)} className="p-2 text-gray-400 hover:text-red-600">
@@ -117,7 +118,7 @@ export default function Projects() {
                 {project.members?.length > 0 && (
                   <div className="flex items-center gap-1">
                     <Users size={16} />
-                    <span>{project.members.length} miembros</span>
+                    <span>{project.members.length} membros</span>
                   </div>
                 )}
                 {project.publicUrl && (
@@ -131,14 +132,14 @@ export default function Projects() {
               {getResponsibleNames(project) && (
                 <div className="flex items-center gap-1 mb-4 text-sm">
                   <UserCheck size={16} className="text-blue-600" />
-                  <span className="text-gray-600">Responsables: {getResponsibleNames(project)}</span>
+                  <span className="text-gray-600">Responsáveis: {getResponsibleNames(project)}</span>
                 </div>
               )}
 
               {project.metrics?.[0] && (
                 <div className="pt-4 border-t">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Usuarios:</span>
+                    <span className="text-gray-500">Usuários:</span>
                     <span className="font-medium">{project.metrics[0].activeUsers} / {project.metrics[0].totalUsers}</span>
                   </div>
                 </div>
@@ -148,7 +149,7 @@ export default function Projects() {
 
           {(!projects || projects.length === 0) && (
             <div className="col-span-full text-center py-12 text-gray-500">
-              No hay proyectos registrados. Crea el primero.
+              Não há projetos registrados. Crie o primeiro.
             </div>
           )}
         </div>
@@ -157,11 +158,11 @@ export default function Projects() {
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6">
-            <h2 className="text-xl font-bold mb-4">Nuevo Proyecto</h2>
+            <h2 className="text-xl font-bold mb-4">Novo Projeto</h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
                 <input
                   type="text"
                   value={formData.name}
@@ -172,7 +173,7 @@ export default function Projects() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -188,10 +189,10 @@ export default function Projects() {
                   onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   className="w-full px-3 py-2 border rounded-lg"
                 >
-                  <option value="ACTIVE">Activo</option>
+                  <option value="ACTIVE">Ativo</option>
                   <option value="PAUSED">Pausado</option>
                   <option value="EXPERIMENTAL">Experimental</option>
-                  <option value="RENTABLE">Rentable</option>
+                  <option value="RENTABLE">Rentável</option>
                   <option value="ABANDONED">Abandonado</option>
                 </select>
               </div>
@@ -208,7 +209,7 @@ export default function Projects() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Responsables</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Responsáveis</label>
                 <div className="max-h-40 overflow-y-auto border rounded-lg p-2 space-y-2">
                   {users?.map((user: any) => (
                     <label key={user.id} className="flex items-center gap-2 p-1 hover:bg-gray-50 rounded cursor-pointer">
@@ -224,7 +225,7 @@ export default function Projects() {
                 </div>
                 {formData.responsibleIds.length > 0 && (
                   <p className="text-xs text-gray-500 mt-1">
-                    {formData.responsibleIds.length} responsable(s) seleccionado(s)
+                    {formData.responsibleIds.length} responsável(is) selecionado(s)
                   </p>
                 )}
               </div>
@@ -242,7 +243,7 @@ export default function Projects() {
                   disabled={createMutation.isPending}
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
                 >
-                  {createMutation.isPending ? 'Guardando...' : 'Guardar'}
+                  {createMutation.isPending ? 'Salvando...' : 'Salvar'}
                 </button>
               </div>
             </form>

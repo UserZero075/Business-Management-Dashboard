@@ -79,7 +79,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
     const existing = await fastify.prisma.user.findUnique({ where: { email } });
     if (existing) {
-      return reply.status(400).send({ error: 'Email already exists' });
+      return reply.status(400).send({ error: 'E-mail já cadastrado' });
     }
 
     const code = String(randomInt(100000, 1000000));
@@ -98,8 +98,8 @@ export default async function authRoutes(fastify: FastifyInstance) {
     try {
       const result = await sendMail({
         to: email,
-        subject: 'Codigo de registro',
-        text: `Tu codigo de registro es ${code}. Expira en ${OTP_TTL_MINUTES} minutos.`
+        subject: 'Código de cadastro',
+        text: `Seu código de cadastro é ${code}. Ele expira em ${OTP_TTL_MINUTES} minutos.`
       });
 
       return {
@@ -108,8 +108,8 @@ export default async function authRoutes(fastify: FastifyInstance) {
         devCode: result.dev && process.env.NODE_ENV !== 'production' ? code : undefined
       };
     } catch (error: any) {
-      fastify.log.error(error, 'Failed to send OTP email');
-      return reply.status(502).send({ error: 'No se pudo enviar el codigo OTP' });
+      fastify.log.error(error, 'Falha ao enviar e-mail OTP');
+      return reply.status(502).send({ error: 'Não foi possível enviar o código OTP' });
     }
   });
 
@@ -122,7 +122,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
     });
 
     if (existing) {
-      return reply.status(400).send({ error: 'Email already exists' });
+      return reply.status(400).send({ error: 'E-mail já cadastrado' });
     }
 
     const otp = await fastify.prisma.emailOtp.findFirst({
@@ -131,7 +131,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
     });
 
     if (!otp || !(await bcrypt.compare(data.otp, otp.code))) {
-      return reply.status(400).send({ error: 'Codigo OTP invalido o expirado' });
+      return reply.status(400).send({ error: 'Código OTP inválido ou expirado' });
     }
 
     let defaultRole = await fastify.prisma.role.findFirst({
@@ -147,7 +147,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
       });
     }
 
-    // Check if this is the first user (make them admin)
+    // O primeiro usuário recebe o papel de administrador.
     const userCount = await fastify.prisma.user.count();
     let roleId = defaultRole.id;
     
@@ -194,7 +194,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
       action: 'auth.register',
       entityType: 'User',
       entityId: user.id,
-      message: `${user.name} se registró en ${company?.value || 'DevFast'} Manager`
+      message: `${user.name} se cadastrou no gestor ${company?.value || 'DevFast'}`
     });
 
     return {
@@ -213,13 +213,13 @@ export default async function authRoutes(fastify: FastifyInstance) {
     });
 
     if (!user) {
-      return reply.status(401).send({ error: 'Invalid credentials' });
+      return reply.status(401).send({ error: 'Credenciais inválidas' });
     }
 
     const valid = await bcrypt.compare(data.password, user.password);
 
     if (!valid) {
-      return reply.status(401).send({ error: 'Invalid credentials' });
+      return reply.status(401).send({ error: 'Credenciais inválidas' });
     }
 
     const token = fastify.jwt.sign({ id: user.id, email: user.email, roleId: user.roleId });
@@ -229,7 +229,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
       action: 'auth.login',
       entityType: 'User',
       entityId: user.id,
-      message: `${user.name} inició sesión`
+      message: `${user.name} entrou no sistema`
     });
 
     return {
@@ -245,7 +245,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
     });
 
     if (!user) {
-      return reply.status(404).send({ error: 'User not found' });
+      return reply.status(404).send({ error: 'Usuário não encontrado' });
     }
 
     return authUserResponse(user);
@@ -264,7 +264,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
       action: 'user.profile.update',
       entityType: 'User',
       entityId: user.id,
-      message: `${user.name} actualizó su perfil`
+      message: `${user.name} atualizou o perfil`
     });
 
     return authUserResponse(user);
@@ -319,7 +319,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
     });
 
     if (!user) {
-      return reply.status(404).send({ error: 'User not found' });
+      return reply.status(404).send({ error: 'Usuário não encontrado' });
     }
 
     return {
@@ -343,7 +343,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
     const { name, permissions } = request.body as { name: string; permissions?: string[] };
     
     if (!name) {
-      return reply.status(400).send({ error: 'Role name is required' });
+      return reply.status(400).send({ error: 'Nome do papel é obrigatório' });
     }
 
     const role = await fastify.prisma.role.create({
@@ -361,7 +361,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
     const { roleId } = request.body as { roleId: number };
 
     if (!roleId) {
-      return reply.status(400).send({ error: 'Role ID is required' });
+      return reply.status(400).send({ error: 'ID do papel é obrigatório' });
     }
 
     const user = await fastify.prisma.user.update({
@@ -375,7 +375,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
       action: 'user.role.update',
       entityType: 'User',
       entityId: user.id,
-      message: `Cambió el rol de ${user.name} a ${user.role.name}`
+      message: `Alterou o papel de ${user.name} para ${user.role.name}`
     });
 
     return user;

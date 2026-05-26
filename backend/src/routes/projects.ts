@@ -42,7 +42,7 @@ export default async function projectRoutes(fastify: FastifyInstance) {
     });
 
     if (!project) {
-      return reply.status(404).send({ error: 'Project not found' });
+      return reply.status(404).send({ error: 'Projeto não encontrado' });
     }
 
     return project;
@@ -77,7 +77,7 @@ export default async function projectRoutes(fastify: FastifyInstance) {
       action: 'project.create',
       entityType: 'Project',
       entityId: project.id,
-      message: `Creó el proyecto: ${project.name}`
+      message: `Criou o projeto: ${project.name}`
     });
 
     return fastify.prisma.project.findUnique({
@@ -122,7 +122,7 @@ export default async function projectRoutes(fastify: FastifyInstance) {
       action: 'project.update',
       entityType: 'Project',
       entityId: project.id,
-      message: `Actualizó el proyecto: ${project.name}`,
+      message: `Atualizou o projeto: ${project.name}`,
       metadata: updateData
     });
 

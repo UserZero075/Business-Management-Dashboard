@@ -29,7 +29,7 @@ export async function ensureBaseRoles(prisma: PrismaClient) {
 export async function ensureCompanySettings(prisma: PrismaClient) {
   const defaults = {
     companyName: 'DevFast',
-    companyObjective: 'Manager open-source para operar proyectos, infraestructura, finanzas y equipo.',
+    companyObjective: 'Gestor open-source para operar projetos, infraestrutura, finanças e equipe.',
     companyLogoUrl: '',
   };
 

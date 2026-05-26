@@ -1,81 +1,63 @@
 # DevFast Manager
 
-Sistema de gestión integral para DevFast - Control de proyectos, infraestructura, finanzas y equipo.
+Sistema de gestão integral para DevFast: controle de projetos, infraestrutura, finanças e equipe.
 
-## Stack Tecnológico
+## Stack Tecnológica
 
 - **Backend**: Node.js + Fastify + TypeScript + Prisma
 - **Frontend**: React + Vite + TypeScript + Tailwind CSS
-- **Base de datos**: SQLite (configurado) - puede cambiarse a MySQL/PostgreSQL
+- **Banco de dados**: SQLite configurado, com possibilidade de troca para MySQL/PostgreSQL
 - **Gráficos**: Recharts
 
-## Estructura del Proyecto
+## Estrutura do Projeto
 
-```
+```text
 DevFast Manager/
 ├── backend/          # API REST
 │   ├── src/
-│   │   ├── routes/   # Endpoints de API
-│   │   ├── services/ # Lógica de negocio
-│   │   ├── db.ts     # Conexión a Prisma
+│   │   ├── routes/   # Endpoints da API
+│   │   ├── services/ # Lógica de negócio
+│   │   ├── db.ts     # Conexão com Prisma
 │   │   └── index.ts  # Servidor principal
-│   ├── prisma/       # Schema de base de datos
+│   ├── prisma/       # Schema do banco de dados
 │   └── package.json
-├── frontend/         # Aplicación React
+├── frontend/         # Aplicação React
 │   ├── src/
-│   │   ├── api/     # Cliente API
-│   │   ├── components/  # Componentes UI
-│   │   ├── pages/    # Páginas
-│   │   ├── hooks/   # Custom hooks
-│   │   └── App.tsx  # App principal
+│   │   ├── api/        # Cliente da API
+│   │   ├── components/ # Componentes de UI
+│   │   ├── pages/      # Páginas
+│   │   ├── hooks/      # Hooks customizados
+│   │   └── App.tsx     # App principal
 │   └── package.json
-├── deploy.sh         # Script de despliegue
-├── Documentation/     # Documentación
-│   ├── es/           # Español
-│   └── en/           # English
+├── deploy.sh         # Script de deploy
+├── Documentation/    # Documentação legada em espanhol e inglês
+│   ├── es/
+│   └── en/
 └── README.md
 ```
 
-## Documentación
+## Instalação
 
-### 🇪🇸 Español
-- [Inicio Rápido](./Documentation/es/01-inicio-rapido.md) - Primeros pasos
-- [Guía de Usuario](./Documentation/es/02-guia-usuario.md) - Uso del sistema
-- [Configuración](./Documentation/es/03-configuracion.md) - Variables de entorno
-- [Desarrollo](./Documentation/es/04-desarrollo.md) - Para desarrolladores
-- [API](./Documentation/es/05-api.md) - Endpoints
-- [Arquitectura](./Documentation/es/06-arquitectura.md) - Detalles técnicos
-
-### 🇬🇧 English
-- [Quick Start](./Documentation/en/01-quick-start.md) - First steps
-- [User Guide](./Documentation/en/02-user-guide.md) - System usage
-- [Configuration](./Documentation/en/03-configuration.md) - Environment variables
-- [Development](./Documentation/en/04-development.md) - For developers
-- [API](./Documentation/en/05-api.md) - Endpoints
-- [Architecture](./Documentation/en/06-architecture.md) - Technical details
-
-## Instalación
-
-### Producción rápida con Docker Compose
+### Produção rápida com Docker Compose
 
 ```bash
 cp .env.example .env
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
-# Edita backend/.env: JWT_SECRET y SMTP_* son obligatorios en producción
+# Edite backend/.env: JWT_SECRET e SMTP_* são obrigatórios em produção.
 docker compose up -d --build
 ```
 
-Acceso por defecto:
+Acesso padrão:
 
 ```text
 http://localhost:8080
 http://<hostname-tailscale>:8080
 ```
 
-Ver detalles en [DEPLOYMENT.md](./DEPLOYMENT.md).
+Veja detalhes em [DEPLOYMENT.md](./DEPLOYMENT.md).
 
-### Desarrollo
+### Desenvolvimento
 
 Backend:
 
@@ -85,7 +67,7 @@ cp .env.example .env
 npm install
 npx prisma generate
 npx prisma db push
-npm run dev         # puerto 3001 por defecto
+npm run dev         # porta 3001 por padrão
 ```
 
 Frontend:
@@ -94,230 +76,252 @@ Frontend:
 cd frontend
 cp .env.example .env
 npm install
-npm run dev         # puerto 5173
+npm run dev         # porta 5173
 ```
 
-El frontend usa API relativa por defecto en producción. Para desarrollo con servidores separados puedes definir `VITE_API_URL=http://localhost:3001`.
+O frontend usa API relativa por padrão em produção. Em desenvolvimento, com servidores separados, defina `VITE_API_URL=http://localhost:3001`.
 
-## Características
+## Funcionalidades
 
 ### Dashboard
-- Resumen de ingresos/gastos/beneficios
-- Proyectos activos y métricas
-- Alertas (VPS sin proyecto, bugs críticos, tareas vencidas)
-- Tasas de cambio USD/USDT/CUP desde El Toque (auto-actualización cada 24h)
-- Modo oscuro mejorado con alertas visuales
 
-### Proyectos
-- CRUD de proyectos
+- Resumo de receitas, despesas e resultado
+- Projetos ativos e métricas
+- Alertas de VPS sem projeto, bugs críticos e tarefas vencidas
+- Taxas de câmbio USD/USDT/CUP pelo El Toque, com atualização automática a cada 24 horas
+- Modo escuro com alertas visuais
+
+### Projetos
+
+- CRUD de projetos
 - Estados: ACTIVE, PAUSED, ABANDONED, EXPERIMENTAL, RENTABLE
-- Miembros y responsables múltiples
-- Métricas de usuarios (totales, activos, pagados, referidos, gratis, colaboración)
+- Múltiplos membros e responsáveis
+- Métricas de usuários totais, ativos, pagantes, indicados, gratuitos e por colaboração
 - URLs públicas
 
-### Infraestructura
-- Servidores VPS con proveedor, costo, specs
-- Items de infraestructura (dominios, DBs, SSL, etc.)
-- Vinculación a proyectos con porcentaje de costo
-- Proveedores
-- Resumen de costos mensuales
+### Infraestrutura
 
-### Finanzas
-- Transacciones de ingresos y gastos
-- Monedas: USD, EUR, CUP, USDT, MLC
-- Tasas de cambio configurables manualmente
-- Fetch automático de tasas desde eltoque.com
-- Impacto por variación de moneda
-- Resumen por proyecto
+- Servidores VPS com provedor, custo e especificações
+- Itens de infraestrutura, como domínios, bancos de dados e SSL
+- Vínculo com projetos por percentual de custo
+- Provedores
+- Resumo de custos mensais
 
-### Tareas y Bugs
-- Kanban de tareas por estado y prioridad
-- Bugs con severidad (critical, high, medium, low)
-- Filtros por proyecto
-- Resumen general por proyecto
-- Muestra creador y asignado con avatar y enlace a perfil
+### Finanças
 
-### Equipo
-- Miembros del equipo
-- Roles configurables (admin, founder, cofounder, marketing, developer, etc.)
-- Proyectos asignados por miembro
-- Perfil público con enlaces a redes sociales
-- Cambio de roles desde la interfaz
+- Transações de receitas e despesas
+- Moedas: USD, EUR, CUP, USDT e MLC
+- Taxas de câmbio configuráveis manualmente
+- Busca automática de taxas em `eltoque.com`
+- Impacto por variação de moeda
+- Resumo por projeto
+
+### Tarefas e Bugs
+
+- Kanban de tarefas por estado e prioridade
+- Bugs com severidade: critical, high, medium e low
+- Filtros por projeto
+- Resumo geral por projeto
+- Criador e responsável com avatar e link para o perfil
+
+### Equipe
+
+- Membros da equipe
+- Papéis configuráveis: admin, founder, cofounder, marketing, developer e outros
+- Projetos atribuídos por membro
+- Perfil público com links para redes sociais
+- Alteração de papéis pela interface
 
 ### Chat Interno
-- Canales: Empresa, Cofundadores, y privados
-- WebSocket con fallback HTTP
-- Mensajes persistentes en base de datos
-- Muestra avatar y nombre con enlace al perfil
 
-### Perfil de Usuario
-- Nombre, bio, avatar
-- Color personalizado
-- Enlaces: GitHub, Facebook, LinkedIn, Website personal
-- Perfil público visible desde Equipo, Chat y Tareas
+- Canais da empresa, cofundadores e mensagens privadas
+- WebSocket com fallback HTTP
+- Mensagens persistentes no banco de dados
+- Avatar e nome com link para o perfil
 
-### Configuración de Empresa
-- Nombre de empresa (personalizable,代替 DevFast)
-- Objetivo del manager
-- Logo URL
-- Disponible en UI: `/settings`
+### Perfil de Usuário
 
-### Registro con OTP
-- Solicita código OTP por correo antes de registrar
-- SMTP configurable via variables de entorno
-- Fallback a consola en desarrollo
-- 6 dígitos, validez 10 minutos
+- Nome, bio e avatar
+- Cor personalizada
+- Links: GitHub, Facebook, LinkedIn e site pessoal
+- Perfil público visível em Equipe, Chat e Tarefas
 
-### Modo Oscuro
-- Toggle en header
-- Persistencia en localStorage
-- CSS optimizado para alertas, colores y scrollbars
-- Responsive diseño móvil
+### Configuração da Empresa
 
-### Reportes
-- Gráfico de ingresos/gastos (12 meses)
-- Distribución de beneficios por proyecto
-- Top 5 proyectos rentables
-- Proyectos en pérdida
-- Comparativa completa
+- Nome da empresa personalizável
+- Objetivo do gestor
+- URL do logo
+- Disponível em `/settings`
 
-## Configuración
+### Cadastro com OTP
 
-### Variables de entorno (backend/.env)
+- Solicita código OTP por e-mail antes do cadastro
+- SMTP configurável por variáveis de ambiente
+- Fallback para console em desenvolvimento
+- Código de 6 dígitos com validade de 10 minutos
+
+### Modo Escuro
+
+- Alternância no cabeçalho
+- Persistência em `localStorage`
+- CSS otimizado para alertas, cores e barras de rolagem
+- Layout responsivo para mobile
+
+### Relatórios
+
+- Gráfico de receitas e despesas dos últimos 12 meses
+- Distribuição de resultados por projeto
+- Top 5 projetos rentáveis
+- Projetos no prejuízo
+- Comparativo completo
+
+## Configuração
+
+### Variáveis de ambiente (`backend/.env`)
 
 ```bash
-# Base de datos
+# Banco de dados
 DATABASE_URL="file:./devfast.db"
 
-# Autenticación
-JWT_SECRET="tu-secret-muy-seguro"
+# Autenticação
+JWT_SECRET="seu-segredo-muito-seguro"
 
 # Servidor
 PORT=3001
 HOST=0.0.0.0
 
-# Tasas de cambio
+# Taxas de câmbio
 EL_TOQUE_URL="https://eltoque.com/tasas-de-cambio-de-moneda-en-cuba-hoy"
 
-# SMTP para OTP (Gmail example)
+# SMTP para OTP
 SMTP_HOST="smtp.gmail.com"
 SMTP_PORT=587
-SMTP_USER="tu-email@gmail.com"
-SMTP_PASS="tu-app-password"
-SMTP_FROM="tu-email@gmail.com"
+SMTP_USER="seu-email@gmail.com"
+SMTP_PASS="sua-senha-de-app"
+SMTP_FROM="seu-email@gmail.com"
 
-# Entorno
+# Ambiente
 NODE_ENV=production
 ```
 
-### Configurar URL del frontend
+### Configurar URL do frontend
 
 ```bash
-VITE_API_URL=http://TU_IP:3001 npm run dev
+VITE_API_URL=http://SEU_IP:3001 npm run dev
 ```
 
-### Cambiar a MySQL/PostgreSQL
+### Trocar para MySQL/PostgreSQL
 
-1. Cambiar el provider en `backend/prisma/schema.prisma`
-2. Actualizar DATABASE_URL
-3. Ejecutar `npx prisma db push`
+1. Altere o `provider` em `backend/prisma/schema.prisma`.
+2. Atualize `DATABASE_URL`.
+3. Execute `npx prisma db push`.
 
 ## Uso
 
-1. Inicia el backend: `cd backend && npm run dev`
-2. Inicia el frontend: `cd frontend && npm run dev`
-3. Abre http://localhost:5173
-4. Regístrate (recibirás código OTP por correo o consola)
-5. Comienza a agregar proyectos, VPS, transacciones, etc.
+1. Inicie o backend: `cd backend && npm run dev`
+2. Inicie o frontend: `cd frontend && npm run dev`
+3. Abra `http://localhost:5173`
+4. Cadastre-se e use o código OTP recebido por e-mail ou exibido no console
+5. Comece a adicionar projetos, VPS, transações e tarefas
 
-## Despliegue en VPS
+## Deploy em VPS
 
-1. Sube el archivo `DevFast-Manager.tar.gz` a tu VPS
-2. Descomprime: `tar -xzvf DevFast-Manager.tar.gz`
-3. Ejecuta: `chmod +x deploy.sh && ./deploy.sh`
+1. Envie `DevFast-Manager.tar.gz` para a VPS.
+2. Extraia: `tar -xzvf DevFast-Manager.tar.gz`.
+3. Execute: `chmod +x deploy.sh && ./deploy.sh`.
 
-El script detectará el SO, instalará Node.js si falta, dependencias, compilará yArrancará el servidor.
+O script detecta o sistema operacional, instala Node.js se necessário, instala dependências, compila e inicia o servidor.
 
-## API Endpoints
+## Endpoints da API
 
-### Autenticación
+### Autenticação
+
 - `POST /api/auth/request-otp` - Solicitar código OTP
-- `POST /api/auth/register` - Registro con OTP
+- `POST /api/auth/register` - Cadastro com OTP
 - `POST /api/auth/login` - Login
-- `GET /api/auth/me` - Usuario actual
-- `PUT /api/auth/me` - Actualizar perfil
-- `GET /api/auth/users` - Lista usuarios
-- `GET /api/auth/users/:id` - Perfil público de usuario
-- `GET /api/auth/roles` - Lista roles
-- `PUT /api/auth/users/:id/role` - Cambiar rol
+- `GET /api/auth/me` - Usuário atual
+- `PUT /api/auth/me` - Atualizar perfil
+- `GET /api/auth/users` - Listar usuários
+- `GET /api/auth/users/:id` - Perfil público do usuário
+- `GET /api/auth/roles` - Listar papéis
+- `PUT /api/auth/users/:id/role` - Alterar papel
 
-### Proyectos
-- `GET /api/projects` - Lista proyectos
-- `POST /api/projects` - Crear proyecto
-- `PUT /api/projects/:id` - Actualizar proyecto
-- `DELETE /api/projects/:id` - Eliminar proyecto
-- `GET /api/projects/:id` - Ver proyecto
-- `POST /api/projects/:id/metrics` - Agregar métricas
+### Projetos
 
-### Infraestructura
-- `GET /api/vps/providers` - Lista proveedores
-- `GET /api/vps/servers` - Lista servidores
-- `POST /api/vps/servers` - Crear servidor
-- `GET /api/vps/items` - Lista items
-- `POST /api/vps/items` - Crear item
-- `GET /api/vps/costs` - Resumen de costos
+- `GET /api/projects` - Listar projetos
+- `POST /api/projects` - Criar projeto
+- `PUT /api/projects/:id` - Atualizar projeto
+- `DELETE /api/projects/:id` - Excluir projeto
+- `GET /api/projects/:id` - Ver projeto
+- `POST /api/projects/:id/metrics` - Adicionar métricas
 
-### Finanzas
-- `GET /api/finance/transactions` - Transacciones
-- `POST /api/finance/transactions` - Crear transacción
-- `GET /api/finance/summary` - Resumen financiero
-- `GET /api/finance/rates/latest` - Tasas actuales
+### Infraestrutura
 
-### Tareas y Bugs
-- `GET /api/tasks/tasks` - Lista tareas
-- `POST /api/tasks/tasks` - Crear tarea
-- `GET /api/tasks/bugs` - Lista bugs
-- `POST /api/tasks/bugs` - Crear bug
-- `GET /api/tasks/overview` - Resumen
+- `GET /api/vps/providers` - Listar provedores
+- `GET /api/vps/servers` - Listar servidores
+- `POST /api/vps/servers` - Criar servidor
+- `GET /api/vps/items` - Listar itens
+- `POST /api/vps/items` - Criar item
+- `GET /api/vps/costs` - Resumo de custos
+
+### Finanças
+
+- `GET /api/finance/transactions` - Transações
+- `POST /api/finance/transactions` - Criar transação
+- `GET /api/finance/summary` - Resumo financeiro
+- `GET /api/finance/rates/latest` - Taxas atuais
+
+### Tarefas e Bugs
+
+- `GET /api/tasks/tasks` - Listar tarefas
+- `POST /api/tasks/tasks` - Criar tarefa
+- `GET /api/tasks/bugs` - Listar bugs
+- `POST /api/tasks/bugs` - Criar bug
+- `GET /api/tasks/overview` - Resumo
 
 ### Dashboard
-- `GET /api/dashboard` - Overview general
+
+- `GET /api/dashboard` - Visão geral
 - `GET /api/dashboard/alerts` - Alertas
-- `GET /api/dashboard/charts/income-expense` - Gráfico ingresos/gastos
+- `GET /api/dashboard/charts/income-expense` - Gráfico de receitas e despesas
 
 ### Chat
-- `GET /api/chat/channels` - Canales del usuario
-- `GET /api/chat/channels/:id/messages` - Mensajes
-- `POST /api/chat/channels/:id/messages` - Enviar mensaje
-- `POST /api/chat/private` - Crear canal privado
+
+- `GET /api/chat/channels` - Canais do usuário
+- `GET /api/chat/channels/:id/messages` - Mensagens
+- `POST /api/chat/channels/:id/messages` - Enviar mensagem
+- `POST /api/chat/private` - Criar canal privado
 - WebSocket: `ws://host/api/chat/ws?token=...`
 
-### Configuración
-- `GET /api/settings/company` - Ver configuración de empresa
-- `PUT /api/settings/company` - Actualizar empresa
+### Configuração
 
-## Estado del Proyecto
+- `GET /api/settings/company` - Ver configuração da empresa
+- `PUT /api/settings/company` - Atualizar empresa
 
-✅ Completado:
-- Autenticación JWT con bcrypt
-- Roles base y permisos
-- CRUD completo de proyectos
-- Gestión de infraestructura (VPS, items)
-- Finanzas con conversión de monedas
-- Tareas y bugs con creadores/asignados
-- Dashboard con métricas
-- Reportes gráficos
-- Chat interno con WebSocket
-- Perfiles de usuario extendidos
-- Perfiles públicos enlazados desde equipo/chat/tareas
-- Configuración de empresa personalizable
-- Registro con OTP por correo
-- Modo oscuro global
-- Diseño responsive móvil
-- Integración con El Toque (tasas automáticas cada 24h)
+## Estado do Projeto
 
-⏳ Pendiente:
-- Importación CSV
-- Notificaciones push
-- Más integraciones de monitoreo
-- Tests automatizados
+Concluído:
+
+- Autenticação JWT com bcrypt
+- Papéis base e permissões
+- CRUD completo de projetos
+- Gestão de infraestrutura com VPS e itens
+- Finanças com conversão de moedas
+- Tarefas e bugs com criadores e responsáveis
+- Dashboard com métricas
+- Relatórios gráficos
+- Chat interno com WebSocket
+- Perfis de usuário estendidos
+- Perfis públicos vinculados a equipe, chat e tarefas
+- Configuração personalizável da empresa
+- Cadastro com OTP por e-mail
+- Modo escuro global
+- Layout responsivo para mobile
+- Integração com El Toque para taxas automáticas a cada 24 horas
+
+Pendente:
+
+- Importação CSV
+- Notificações push
+- Mais integrações de monitoramento
+- Testes automatizados

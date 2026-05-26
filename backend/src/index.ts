@@ -26,7 +26,7 @@ await fastify.register(cors, {
 
 const jwtSecret = process.env.JWT_SECRET;
 if (process.env.NODE_ENV === 'production' && (!jwtSecret || jwtSecret === "devfast-secret-key-change-in-production")) {
-  throw new Error("JWT_SECRET must be set to a secure value in production");
+  throw new Error("JWT_SECRET deve ser definido com um valor seguro em produção");
 }
 
 await fastify.register(jwt, {
@@ -41,7 +41,7 @@ fastify.decorate("authenticate", async function (request: any, reply: any) {
   try {
     await request.jwtVerify();
   } catch (err) {
-    reply.status(401).send({ error: "Unauthorized" });
+    reply.status(401).send({ error: "Não autorizado" });
   }
 });
 
@@ -64,7 +64,7 @@ const start = async () => {
     await bootstrapApplication(prisma);
     const port = parseInt(process.env.PORT || "3001");
     await fastify.listen({ port, host: process.env.HOST || "0.0.0.0" });
-    console.log(`🚀 Server running on http://localhost:${port}`);
+    console.log(`🚀 Servidor rodando em http://localhost:${port}`);
     scheduleElToqueRates(prisma, fastify.log);
   } catch (err) {
     fastify.log.error(err);

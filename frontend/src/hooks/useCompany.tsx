@@ -6,7 +6,7 @@ export function useCompany() {
 
   return {
     companyName: data?.companyName || 'DevFast',
-    companyObjective: data?.companyObjective || 'Manager open-source para operar proyectos, infraestructura, finanzas y equipo.',
+    companyObjective: data?.companyObjective || 'Gestor open-source para operar projetos, infraestrutura, finanças e equipe.',
     companyLogoUrl: data?.companyLogoUrl || '',
   };
 }

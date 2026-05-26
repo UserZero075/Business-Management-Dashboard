@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { authApi, projectApi } from '../api/client';
 import { Avatar } from '../utils/userVisuals';
 import { ExternalLink } from 'lucide-react';
+import { roleLabel } from '../utils/labels';
 
 export default function Team() {
   const queryClient = useQueryClient();
@@ -22,8 +23,8 @@ export default function Team() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-800">Equipo</h1>
-        <p className="text-gray-500">Miembros, roles, perfiles y proyectos relacionados.</p>
+        <h1 className="text-2xl font-bold text-gray-800">Equipe</h1>
+        <p className="text-gray-500">Membros, funções, perfis e projetos relacionados.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -50,13 +51,13 @@ export default function Team() {
               </div>
 
               <div className="mb-4">
-                <label className="block text-xs text-gray-500 mb-1">Rol</label>
+                <label className="block text-xs text-gray-500 mb-1">Papel</label>
                 <select
                   value={user.roleId || user.role?.id || ''}
                   onChange={(event) => roleMutation.mutate({ userId: user.id, roleId: Number(event.target.value) })}
                   className="w-full px-3 py-2 border rounded-lg bg-white"
                 >
-                  {roles?.map((role: any) => <option key={role.id} value={role.id}>{role.name}</option>)}
+                  {roles?.map((role: any) => <option key={role.id} value={role.id}>{roleLabel(role.name)}</option>)}
                 </select>
               </div>
 
@@ -72,7 +73,7 @@ export default function Team() {
 
               {userProjects.length > 0 ? (
                 <div>
-                  <p className="text-sm text-gray-500 mb-2">Proyectos:</p>
+                  <p className="text-sm text-gray-500 mb-2">Projetos:</p>
                   <div className="flex flex-wrap gap-1">
                     {userProjects.map((p: any) => (
                       <span key={p.id} className="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs">
@@ -82,7 +83,7 @@ export default function Team() {
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-gray-400">Sin proyectos asignados</p>
+                <p className="text-sm text-gray-400">Sem projetos atribuídos</p>
               )}
             </div>
           );
@@ -90,7 +91,7 @@ export default function Team() {
 
         {(!users || users.length === 0) && (
           <div className="col-span-full text-center py-12 text-gray-500">
-            No hay miembros en el equipo
+            Não há membros na equipe
           </div>
         )}
       </div>

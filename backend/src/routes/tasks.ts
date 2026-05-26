@@ -57,7 +57,7 @@ export default async function taskRoutes(fastify: FastifyInstance) {
       action: 'task.create',
       entityType: 'Task',
       entityId: task.id,
-      message: `Creó la tarea: ${task.title}`
+      message: `Criou a tarefa: ${task.title}`
     });
 
     return task;
@@ -81,7 +81,7 @@ export default async function taskRoutes(fastify: FastifyInstance) {
       action: 'task.update',
       entityType: 'Task',
       entityId: task.id,
-      message: `Actualizó la tarea: ${task.title}`,
+      message: `Atualizou a tarefa: ${task.title}`,
       metadata: updateData
     });
 
@@ -127,7 +127,7 @@ export default async function taskRoutes(fastify: FastifyInstance) {
       action: 'bug.create',
       entityType: 'Bug',
       entityId: bug.id,
-      message: `Reportó el bug: ${bug.title}`
+      message: `Reportou o bug: ${bug.title}`
     });
 
     return bug;
@@ -152,7 +152,7 @@ export default async function taskRoutes(fastify: FastifyInstance) {
       action: 'bug.update',
       entityType: 'Bug',
       entityId: bug.id,
-      message: `Actualizó el bug: ${bug.title}`,
+      message: `Atualizou o bug: ${bug.title}`,
       metadata: updateData
     });
 
@@ -204,7 +204,7 @@ export default async function taskRoutes(fastify: FastifyInstance) {
       },
       byProject: tasksByProject.map(t => ({
         projectId: t.projectId,
-        projectName: projectMap[t.projectId] || 'Unknown',
+        projectName: projectMap[t.projectId] || 'Desconhecido',
         tasks: t._count,
         bugs: bugsByProject.find(b => b.projectId === t.projectId)?._count || 0
       }))

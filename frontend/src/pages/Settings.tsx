@@ -29,8 +29,8 @@ export default function Settings() {
   return (
     <div className="space-y-6 max-w-3xl">
       <div>
-        <h1 className="text-2xl font-bold text-gray-800">Configuración de Empresa</h1>
-        <p className="text-gray-500">Personaliza el nombre, objetivo y logo que usa el manager.</p>
+        <h1 className="text-2xl font-bold text-gray-800">Configuração da Empresa</h1>
+        <p className="text-gray-500">Personalize o nome, objetivo e logo usados pelo gestor.</p>
       </div>
 
       <form
@@ -38,10 +38,10 @@ export default function Settings() {
         className="bg-white rounded-xl shadow-sm border p-6 space-y-5"
       >
         {mutation.error && <div className="bg-red-50 text-red-700 border border-red-200 rounded-lg p-3 text-sm">{(mutation.error as Error).message}</div>}
-        {saved && <div className="bg-blue-50 text-blue-700 border border-blue-200 rounded-lg p-3 text-sm">Configuración guardada.</div>}
+        {saved && <div className="bg-blue-50 text-blue-700 border border-blue-200 rounded-lg p-3 text-sm">Configuração salva.</div>}
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de empresa</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Nome da empresa</label>
           <input
             value={formData.companyName}
             onChange={(event) => setFormData({ ...formData, companyName: event.target.value })}
@@ -52,7 +52,7 @@ export default function Settings() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Objetivo del manager</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Objetivo do gestor</label>
           <textarea
             value={formData.companyObjective}
             onChange={(event) => setFormData({ ...formData, companyObjective: event.target.value })}
@@ -75,9 +75,9 @@ export default function Settings() {
 
         <div className="flex flex-col sm:flex-row sm:items-center gap-4 pt-2">
           <button disabled={mutation.isPending} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
-            {mutation.isPending ? 'Guardando...' : 'Guardar cambios'}
+            {mutation.isPending ? 'Salvando...' : 'Salvar alterações'}
           </button>
-          {formData.companyLogoUrl && <img src={formData.companyLogoUrl} alt="Vista previa" className="w-12 h-12 object-contain rounded-lg border bg-gray-50" />}
+          {formData.companyLogoUrl && <img src={formData.companyLogoUrl} alt="Prévia" className="w-12 h-12 object-contain rounded-lg border bg-gray-50" />}
         </div>
       </form>
     </div>

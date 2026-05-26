@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { dashboardApi, financeApi } from '../api/client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { statusLabel } from '../utils/labels';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
@@ -10,7 +11,7 @@ export default function Reports() {
   const { data: summary } = useQuery({ queryKey: ['finance-summary'], queryFn: () => financeApi.getSummary() });
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('es-CU', { style: 'currency', currency: 'CUP', maximumFractionDigits: 0 }).format(value);
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'CUP', maximumFractionDigits: 0 }).format(value);
   };
 
   const pieData = projectPerformance?.slice(0, 5).map((p: any) => ({
@@ -29,11 +30,11 @@ export default function Reports() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-800">Reportes</h1>
+      <h1 className="text-2xl font-bold text-gray-800">Relatórios</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-sm border p-6">
-          <h3 className="text-lg font-semibold mb-4">Ingresos y Gastos (12 meses)</h3>
+          <h3 className="text-lg font-semibold mb-4">Receitas e Despesas (12 meses)</h3>
           {chartData && chartData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={chartData}>
@@ -41,18 +42,18 @@ export default function Reports() {
                 <XAxis dataKey="month" />
                 <YAxis />
                 <Tooltip formatter={(value: any) => formatCurrency(Number(value) || 0)} />
-                <Bar dataKey="income" fill="#22c55e" name="Ingresos" />
-                <Bar dataKey="expense" fill="#ef4444" name="Gastos" />
-                <Bar dataKey="profit" fill="#3b82f6" name="Beneficio" />
+                <Bar dataKey="income" fill="#22c55e" name="Receitas" />
+                <Bar dataKey="expense" fill="#ef4444" name="Despesas" />
+                <Bar dataKey="profit" fill="#3b82f6" name="Resultado" />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <p className="text-center py-8 text-gray-500">No hay datos disponibles</p>
+            <p className="text-center py-8 text-gray-500">Não há dados disponíveis</p>
           )}
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border p-6">
-          <h3 className="text-lg font-semibold mb-4">Distribución de Beneficios por Proyecto</h3>
+          <h3 className="text-lg font-semibold mb-4">Distribuição de Resultados por Projeto</h3>
           {pieData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
@@ -73,14 +74,14 @@ export default function Reports() {
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <p className="text-center py-8 text-gray-500">No hay datos disponibles</p>
+            <p className="text-center py-8 text-gray-500">Não há dados disponíveis</p>
           )}
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-sm border p-6">
-          <h3 className="text-lg font-semibold mb-4 text-green-700">Top 5 Proyectos Rentables</h3>
+          <h3 className="text-lg font-semibold mb-4 text-green-700">Top 5 Projetos Rentáveis</h3>
           {topProjects.length > 0 ? (
             <div className="space-y-3">
               {topProjects.map((p: any, i: number) => (
@@ -94,12 +95,12 @@ export default function Reports() {
               ))}
             </div>
           ) : (
-            <p className="text-center py-4 text-gray-500">No hay datos disponibles</p>
+            <p className="text-center py-4 text-gray-500">Não há dados disponíveis</p>
           )}
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border p-6">
-          <h3 className="text-lg font-semibold mb-4 text-red-700">Proyectos en Pérdida</h3>
+          <h3 className="text-lg font-semibold mb-4 text-red-700">Projetos no Prejuízo</h3>
           {worstProjects.length > 0 ? (
             <div className="space-y-3">
               {worstProjects.map((p: any, i: number) => (
@@ -114,49 +115,49 @@ export default function Reports() {
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className="text-gray-500">Ningún proyecto en pérdida</p>
+              <p className="text-gray-500">Nenhum projeto no prejuízo</p>
             </div>
           )}
         </div>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border p-6">
-        <h3 className="text-lg font-semibold mb-4">Resumen Financiero General</h3>
+        <h3 className="text-lg font-semibold mb-4">Resumo Financeiro Geral</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center p-4 bg-green-50 rounded-lg">
-            <p className="text-sm text-gray-600">Ingresos Totales</p>
+            <p className="text-sm text-gray-600">Receitas Totais</p>
             <p className="text-xl font-bold text-green-600">{formatCurrency(summary?.totalIncome || 0)}</p>
           </div>
           <div className="text-center p-4 bg-red-50 rounded-lg">
-            <p className="text-sm text-gray-600">Gastos Totales</p>
+            <p className="text-sm text-gray-600">Despesas Totais</p>
             <p className="text-xl font-bold text-red-600">{formatCurrency(summary?.totalExpense || 0)}</p>
           </div>
           <div className="text-center p-4 bg-blue-50 rounded-lg">
-            <p className="text-sm text-gray-600">Beneficio Neto</p>
+            <p className="text-sm text-gray-600">Resultado Líquido</p>
             <p className={`text-xl font-bold ${(summary?.profit || 0) >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
               {formatCurrency(summary?.profit || 0)}
             </p>
           </div>
           <div className="text-center p-4 bg-purple-50 rounded-lg">
-            <p className="text-sm text-gray-600">Margen</p>
+            <p className="text-sm text-gray-600">Margem</p>
             <p className="text-xl font-bold text-purple-600">{summary?.margin || 0}%</p>
           </div>
         </div>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border p-6">
-        <h3 className="text-lg font-semibold mb-4">Comparativa de Proyectos</h3>
+        <h3 className="text-lg font-semibold mb-4">Comparativo de Projetos</h3>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b">
-                <th className="text-left py-3 px-4 font-medium text-gray-600">Proyecto</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-600">Projeto</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-600">Estado</th>
-                <th className="text-right py-3 px-4 font-medium text-gray-600">Ingresos</th>
-                <th className="text-right py-3 px-4 font-medium text-gray-600">Gastos</th>
-                <th className="text-right py-3 px-4 font-medium text-gray-600">Beneficio</th>
-                <th className="text-right py-3 px-4 font-medium text-gray-600">Margen</th>
-                <th className="text-right py-3 px-4 font-medium text-gray-600">Usuarios</th>
+                <th className="text-right py-3 px-4 font-medium text-gray-600">Receitas</th>
+                <th className="text-right py-3 px-4 font-medium text-gray-600">Despesas</th>
+                <th className="text-right py-3 px-4 font-medium text-gray-600">Resultado</th>
+                <th className="text-right py-3 px-4 font-medium text-gray-600">Margem</th>
+                <th className="text-right py-3 px-4 font-medium text-gray-600">Usuários</th>
               </tr>
             </thead>
             <tbody>
@@ -168,7 +169,7 @@ export default function Reports() {
                       p.status === 'ACTIVE' ? 'bg-green-100 text-green-700' :
                       p.status === 'RENTABLE' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100'
                     }`}>
-                      {p.status}
+                      {statusLabel(p.status)}
                     </span>
                   </td>
                   <td className="py-3 px-4 text-right text-green-600">{formatCurrency(p.income)}</td>
