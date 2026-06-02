@@ -26,11 +26,11 @@ export default async function dashboardRoutes(fastify: FastifyInstance) {
     const openBugs = await fastify.prisma.bug.count({ where: { status: { in: ['OPEN', 'IN_PROGRESS'] } } });
 
     const incomes = await fastify.prisma.financialTransaction.aggregate({
-      where: { type: 'INCOME' },
+      where: { type: 'INCOME', status: 'SETTLED' },
       _sum: { amountCup: true }
     });
     const expenses = await fastify.prisma.financialTransaction.aggregate({
-      where: { type: 'EXPENSE' },
+      where: { type: 'EXPENSE', status: 'SETTLED' },
       _sum: { amountCup: true }
     });
 
@@ -42,11 +42,11 @@ export default async function dashboardRoutes(fastify: FastifyInstance) {
     monthStart.setHours(0, 0, 0, 0);
 
     const monthIncomes = await fastify.prisma.financialTransaction.aggregate({
-      where: { type: 'INCOME', date: { gte: monthStart } },
+      where: { type: 'INCOME', status: 'SETTLED', date: { gte: monthStart } },
       _sum: { amountCup: true }
     });
     const monthExpenses = await fastify.prisma.financialTransaction.aggregate({
-      where: { type: 'EXPENSE', date: { gte: monthStart } },
+      where: { type: 'EXPENSE', status: 'SETTLED', date: { gte: monthStart } },
       _sum: { amountCup: true }
     });
 
@@ -90,8 +90,8 @@ export default async function dashboardRoutes(fastify: FastifyInstance) {
     });
 
     return projects.map(p => {
-      const income = p.transactions.filter(t => t.type === 'INCOME').reduce((sum, t) => sum + Number(t.amountCup || 0), 0);
-      const expense = p.transactions.filter(t => t.type === 'EXPENSE').reduce((sum, t) => sum + Number(t.amountCup || 0), 0);
+      const income = p.transactions.filter(t => t.type === 'INCOME' && t.status === 'SETTLED').reduce((sum, t) => sum + Number(t.amountCup || 0), 0);
+      const expense = p.transactions.filter(t => t.type === 'EXPENSE' && t.status === 'SETTLED').reduce((sum, t) => sum + Number(t.amountCup || 0), 0);
       const latestMetric = p.metrics[0];
 
       return {
@@ -201,7 +201,7 @@ export default async function dashboardRoutes(fastify: FastifyInstance) {
     monthsAgo.setMonth(monthsAgo.getMonth() - parseInt(months));
 
     const transactions = await fastify.prisma.financialTransaction.findMany({
-      where: { date: { gte: monthsAgo } },
+      where: { date: { gte: monthsAgo }, status: 'SETTLED' },
       orderBy: { date: 'asc' }
     });
 
@@ -235,8 +235,8 @@ export default async function dashboardRoutes(fastify: FastifyInstance) {
     });
 
     return projects.map(p => {
-      const income = p.transactions.filter(t => t.type === 'INCOME').reduce((sum, t) => sum + Number(t.amountCup || 0), 0);
-      const expense = p.transactions.filter(t => t.type === 'EXPENSE').reduce((sum, t) => sum + Number(t.amountCup || 0), 0);
+      const income = p.transactions.filter(t => t.type === 'INCOME' && t.status === 'SETTLED').reduce((sum, t) => sum + Number(t.amountCup || 0), 0);
+      const expense = p.transactions.filter(t => t.type === 'EXPENSE' && t.status === 'SETTLED').reduce((sum, t) => sum + Number(t.amountCup || 0), 0);
       const latestMetric = p.metrics[0];
 
       return {

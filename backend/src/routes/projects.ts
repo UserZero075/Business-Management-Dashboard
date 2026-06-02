@@ -1,22 +1,30 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
 import { logActivity } from '../services/activity.js';
+import { parseBrazilDateOnly, todayBrazilDateOnly } from '../utils/dates.js';
 
 const projectSchema = z.object({
   name: z.string().min(1),
-  description: z.string().optional(),
+  description: z.string().optional().nullable(),
   status: z.enum(['ACTIVE', 'PAUSED', 'ABANDONED', 'EXPERIMENTAL', 'RENTABLE']).optional(),
   publicUrl: z.preprocess(
     (value) => value === '' ? null : value,
     z.string().url().optional().nullable()
   ),
-  responsibleIds: z.array(z.number()).optional().nullable()
+  responsibleIds: z.array(z.number()).optional().nullable(),
+  clientId: z.number().int().positive(),
+  startDate: z.preprocess((val) => (val === '' ? null : val), z.string().optional().nullable()),
+  endDate: z.preprocess((val) => (val === '' ? null : val), z.string().optional().nullable()),
+  contractValue: z.preprocess((val) => (val === '' || val === undefined || val === null ? null : Number(val)), z.number().optional().nullable())
 });
+
+const clientInclude = { select: { id: true, name: true, company: true, document: true } };
 
 export default async function projectRoutes(fastify: FastifyInstance) {
   fastify.get('/', { preHandler: [fastify.authenticate] }, async (request: FastifyRequest) => {
     return fastify.prisma.project.findMany({
       include: {
+        client: clientInclude,
         members: { include: { user: { select: { id: true, name: true, email: true } } } },
         vpsLinks: { include: { server: true } },
         infraLinks: { include: { item: true } },
@@ -31,6 +39,7 @@ export default async function projectRoutes(fastify: FastifyInstance) {
     const project = await fastify.prisma.project.findUnique({
       where: { id },
       include: {
+        client: clientInclude,
         members: { include: { user: { select: { id: true, name: true, email: true } } } },
         vpsLinks: { include: { server: true } },
         infraLinks: { include: { item: true } },
@@ -51,12 +60,25 @@ export default async function projectRoutes(fastify: FastifyInstance) {
   fastify.post('/', { preHandler: [fastify.authenticate] }, async (request: FastifyRequest, reply: FastifyReply) => {
     const data = projectSchema.parse(request.body);
 
+    const client = await fastify.prisma.client.findUnique({
+      where: { id: data.clientId },
+      select: { id: true }
+    });
+
+    if (!client) {
+      return reply.status(404).send({ error: 'Cliente não encontrado' });
+    }
+
     const project = await fastify.prisma.project.create({
       data: {
         name: data.name,
         description: data.description,
         status: data.status || 'ACTIVE',
-        publicUrl: data.publicUrl || null
+        publicUrl: data.publicUrl || null,
+        clientId: data.clientId,
+        startDate: parseBrazilDateOnly(data.startDate),
+        endDate: parseBrazilDateOnly(data.endDate),
+        contractValue: data.contractValue !== undefined && data.contractValue !== null ? Number(data.contractValue) : null
       }
     });
 
@@ -83,6 +105,7 @@ export default async function projectRoutes(fastify: FastifyInstance) {
     return fastify.prisma.project.findUnique({
       where: { id: project.id },
       include: {
+        client: clientInclude,
         members: { include: { user: { select: { id: true, name: true, email: true } } } }
       }
     });
@@ -93,6 +116,24 @@ export default async function projectRoutes(fastify: FastifyInstance) {
     const data = projectSchema.partial().parse(request.body);
 
     const { responsibleIds, ...updateData } = data as any;
+
+    if (updateData.clientId !== undefined) {
+      const client = await fastify.prisma.client.findUnique({
+        where: { id: updateData.clientId },
+        select: { id: true }
+      });
+
+      if (!client) {
+        return reply.status(404).send({ error: 'Cliente não encontrado' });
+      }
+    }
+
+    if (updateData.startDate !== undefined) {
+      updateData.startDate = parseBrazilDateOnly(updateData.startDate);
+    }
+    if (updateData.endDate !== undefined) {
+      updateData.endDate = parseBrazilDateOnly(updateData.endDate);
+    }
 
     const project = await fastify.prisma.project.update({
       where: { id },
@@ -129,6 +170,7 @@ export default async function projectRoutes(fastify: FastifyInstance) {
     return fastify.prisma.project.findUnique({
       where: { id },
       include: {
+        client: clientInclude,
         members: { include: { user: { select: { id: true, name: true, email: true } } } }
       }
     });
@@ -184,7 +226,7 @@ export default async function projectRoutes(fastify: FastifyInstance) {
       date?: string;
     };
 
-    const metricDate = date ? new Date(date) : new Date();
+    const metricDate = parseBrazilDateOnly(date) || todayBrazilDateOnly();
     const metricData = {
         projectId,
         totalUsers,
@@ -217,22 +259,22 @@ export default async function projectRoutes(fastify: FastifyInstance) {
     monthStart.setHours(0, 0, 0, 0);
 
     const incomes = await fastify.prisma.financialTransaction.aggregate({
-      where: { projectId: id, type: 'INCOME' },
+      where: { projectId: id, type: 'INCOME', status: 'SETTLED' },
       _sum: { amountCup: true }
     });
 
     const expenses = await fastify.prisma.financialTransaction.aggregate({
-      where: { projectId: id, type: 'EXPENSE' },
+      where: { projectId: id, type: 'EXPENSE', status: 'SETTLED' },
       _sum: { amountCup: true }
     });
 
     const monthIncomes = await fastify.prisma.financialTransaction.aggregate({
-      where: { projectId: id, type: 'INCOME', date: { gte: monthStart } },
+      where: { projectId: id, type: 'INCOME', date: { gte: monthStart }, status: 'SETTLED' },
       _sum: { amountCup: true }
     });
 
     const monthExpenses = await fastify.prisma.financialTransaction.aggregate({
-      where: { projectId: id, type: 'EXPENSE', date: { gte: monthStart } },
+      where: { projectId: id, type: 'EXPENSE', date: { gte: monthStart }, status: 'SETTLED' },
       _sum: { amountCup: true }
     });
 

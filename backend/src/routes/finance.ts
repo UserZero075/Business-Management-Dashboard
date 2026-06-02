@@ -1,38 +1,90 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
 import { logActivity } from '../services/activity.js';
+import { brazilDateRange, parseBrazilDateOnly, todayBrazilDateOnly } from '../utils/dates.js';
+
+const optionalDate = z.preprocess((val) => (val === '' ? null : val), z.string().optional().nullable());
 
 const transactionSchema = z.object({
-  projectId: z.number().optional().nullable(),
+  projectId: z.coerce.number().int().positive().optional().nullable(),
+  clientId: z.coerce.number().int().positive().optional().nullable(),
   type: z.enum(['INCOME', 'EXPENSE']),
-  amount: z.number().positive(),
-  currency: z.string().default('USD'),
-  description: z.string().optional(),
-  date: z.string().optional()
+  amount: z.coerce.number().positive(),
+  currency: z.string().trim().default('BRL'),
+  description: z.string().optional().nullable(),
+  date: z.string().optional(),
+  status: z.enum(['SETTLED', 'PENDING']).default('SETTLED'),
+  category: z.string().optional().nullable(),
+  dueDate: optionalDate,
+  paymentDate: optionalDate,
+});
+
+const settleSchema = z.object({
+  paymentDate: optionalDate,
 });
 
 export default async function financeRoutes(fastify: FastifyInstance) {
   fastify.get('/transactions', { preHandler: [fastify.authenticate] }, async (request: FastifyRequest) => {
-    const { projectId, type, startDate, endDate } = request.query as any;
+    const { projectId, clientId, type, status, category, startDate, endDate } = request.query as any;
 
     const where: any = {};
     if (projectId) where.projectId = parseInt(projectId);
+    if (clientId) where.clientId = parseInt(clientId);
     if (type) where.type = type;
-    if (startDate || endDate) {
-      where.date = {};
-      if (startDate) where.date.gte = new Date(startDate);
-      if (endDate) where.date.lte = new Date(endDate);
-    }
+    if (status) where.status = status;
+    if (category) where.category = category;
+    const range = brazilDateRange(startDate, endDate);
+    if (range) where.date = range;
 
     return fastify.prisma.financialTransaction.findMany({
       where,
-      include: { project: { select: { id: true, name: true } } },
+      include: {
+        project: { select: { id: true, name: true } },
+        client: { select: { id: true, name: true, company: true } }
+      },
       orderBy: { date: 'desc' }
     });
   });
 
-  fastify.post('/transactions', { preHandler: [fastify.authenticate] }, async (request: FastifyRequest) => {
+  fastify.get('/transactions/:id', { preHandler: [fastify.authenticate] }, async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+    const id = parseInt(request.params.id);
+    if (!Number.isInteger(id) || id <= 0) return reply.status(400).send({ error: 'ID inválido' });
+
+    const transaction = await fastify.prisma.financialTransaction.findUnique({
+      where: { id },
+      include: {
+        project: { select: { id: true, name: true } },
+        client: { select: { id: true, name: true, company: true } }
+      }
+    });
+
+    if (!transaction) return reply.status(404).send({ error: 'Transação não encontrada' });
+    return transaction;
+  });
+
+  fastify.post('/transactions', { preHandler: [fastify.authenticate] }, async (request: FastifyRequest, reply: FastifyReply) => {
     const data = transactionSchema.parse(request.body);
+
+    let resolvedClientId = data.clientId || null;
+    if (data.projectId) {
+      const project = await fastify.prisma.project.findUnique({
+        where: { id: data.projectId },
+        select: { id: true, clientId: true }
+      });
+
+      if (!project) {
+        return reply.status(404).send({ error: 'Projeto não encontrado' });
+      }
+
+      if (data.clientId && data.clientId !== project.clientId) {
+        return reply.status(400).send({
+          error: 'Cliente incompatível',
+          message: 'O clientId informado não pertence ao projeto selecionado.'
+        });
+      }
+
+      resolvedClientId = project.clientId;
+    }
 
     const latestRate = await fastify.prisma.exchangeRate.findFirst({
       where: { currency: { code: data.currency } },
@@ -45,13 +97,18 @@ export default async function financeRoutes(fastify: FastifyInstance) {
     const transaction = await fastify.prisma.financialTransaction.create({
       data: {
         projectId: data.projectId,
+        clientId: resolvedClientId,
         type: data.type,
         amount: data.amount,
         currency: data.currency,
         amountCup: amountCup,
         exchangeRateUsed: rate,
         description: data.description,
-        date: data.date ? new Date(data.date) : new Date()
+        date: parseBrazilDateOnly(data.date) || todayBrazilDateOnly(),
+        status: data.status,
+        category: data.category,
+        dueDate: parseBrazilDateOnly(data.dueDate),
+        paymentDate: parseBrazilDateOnly(data.paymentDate)
       }
     });
 
@@ -61,7 +118,7 @@ export default async function financeRoutes(fastify: FastifyInstance) {
       entityType: 'FinancialTransaction',
       entityId: transaction.id,
       message: `${data.type === 'INCOME' ? 'Registrou receita' : 'Registrou despesa'} de ${data.amount} ${data.currency}`,
-      metadata: { projectId: data.projectId, amountCup }
+      metadata: { projectId: data.projectId, clientId: resolvedClientId, amountCup }
     });
 
     return transaction;
@@ -73,29 +130,111 @@ export default async function financeRoutes(fastify: FastifyInstance) {
     return { success: true };
   });
 
+  fastify.put('/transactions/:id', { preHandler: [fastify.authenticate] }, async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+    const id = parseInt(request.params.id);
+    if (!Number.isInteger(id) || id <= 0) return reply.status(400).send({ error: 'ID inválido' });
+    const data = transactionSchema.partial().parse(request.body);
+
+    let resolvedClientId = data.clientId === undefined ? undefined : data.clientId || null;
+    if (data.projectId) {
+      const project = await fastify.prisma.project.findUnique({
+        where: { id: data.projectId },
+        select: { id: true, clientId: true }
+      });
+
+      if (!project) {
+        return reply.status(404).send({ error: 'Projeto não encontrado' });
+      }
+
+      if (data.clientId && data.clientId !== project.clientId) {
+        return reply.status(400).send({
+          error: 'Cliente incompatível',
+          message: 'O clientId informado não pertence ao projeto selecionado.'
+        });
+      }
+
+      resolvedClientId = project.clientId;
+    }
+
+    let amountCup: number | undefined;
+    let exchangeRateUsed: number | undefined;
+    if (data.amount !== undefined || data.currency !== undefined) {
+      const current = await fastify.prisma.financialTransaction.findUnique({ where: { id } });
+      if (!current) return reply.status(404).send({ error: 'Transação não encontrada' });
+      const currency = data.currency || current.currency;
+      const amount = data.amount ?? Number(current.amount);
+      const latestRate = await fastify.prisma.exchangeRate.findFirst({
+        where: { currency: { code: currency } },
+        orderBy: { date: 'desc' }
+      });
+
+      exchangeRateUsed = latestRate ? Number(latestRate.rate) : 1;
+      amountCup = currency === 'CUP' ? amount : amount * exchangeRateUsed;
+    }
+
+    const transaction = await fastify.prisma.financialTransaction.update({
+      where: { id },
+      data: {
+        projectId: data.projectId === undefined ? undefined : data.projectId,
+        clientId: resolvedClientId,
+        type: data.type,
+        amount: data.amount,
+        currency: data.currency,
+        amountCup,
+        exchangeRateUsed,
+        description: data.description,
+        date: parseBrazilDateOnly(data.date) ?? undefined,
+        status: data.status,
+        category: data.category,
+        dueDate: data.dueDate === null ? null : (parseBrazilDateOnly(data.dueDate) ?? undefined),
+        paymentDate: data.paymentDate === null ? null : (parseBrazilDateOnly(data.paymentDate) ?? undefined)
+      }
+    });
+
+    await logActivity(fastify.prisma, {
+      userId: (request.user as any).id,
+      action: 'finance.transaction.update',
+      entityType: 'FinancialTransaction',
+      entityId: transaction.id,
+      message: `Atualizou transação financeira #${transaction.id}`
+    });
+
+    return transaction;
+  });
+
+  fastify.patch('/transactions/:id/settle', { preHandler: [fastify.authenticate] }, async (request: FastifyRequest<{ Params: { id: string } }>) => {
+    const id = parseInt(request.params.id);
+    const data = settleSchema.parse(request.body || {});
+    const transaction = await fastify.prisma.financialTransaction.update({
+      where: { id },
+      data: {
+        status: 'SETTLED',
+        paymentDate: parseBrazilDateOnly(data.paymentDate) || todayBrazilDateOnly()
+      }
+    });
+    return transaction;
+  });
+
   fastify.get('/summary', { preHandler: [fastify.authenticate] }, async (request: FastifyRequest) => {
     const { startDate, endDate } = request.query as any;
 
-    const where: any = {};
-    if (startDate || endDate) {
-      where.date = {};
-      if (startDate) where.date.gte = new Date(startDate);
-      if (endDate) where.date.lte = new Date(endDate);
-    }
+    const where: any = { status: 'SETTLED' };
+    const range = brazilDateRange(startDate, endDate);
+    if (range) where.date = range;
 
     const incomes = await fastify.prisma.financialTransaction.aggregate({
-      where: { ...where, type: 'INCOME' },
+      where: { ...where, type: 'INCOME', status: 'SETTLED' },
       _sum: { amountCup: true }
     });
 
     const expenses = await fastify.prisma.financialTransaction.aggregate({
-      where: { ...where, type: 'EXPENSE' },
+      where: { ...where, type: 'EXPENSE', status: 'SETTLED' },
       _sum: { amountCup: true }
     });
 
     const byProject = await fastify.prisma.financialTransaction.groupBy({
       by: ['projectId'],
-      where,
+      where: { ...where, status: 'SETTLED' },
       _sum: { amountCup: true },
       _count: true
     });
@@ -106,11 +245,11 @@ export default async function financeRoutes(fastify: FastifyInstance) {
     const projectSummary = await Promise.all(
       byProject.filter(b => b.projectId).map(async (b) => {
         const income = await fastify.prisma.financialTransaction.aggregate({
-          where: { ...where, projectId: b.projectId, type: 'INCOME' },
+          where: { ...where, projectId: b.projectId, type: 'INCOME', status: 'SETTLED' },
           _sum: { amountCup: true }
         });
         const expense = await fastify.prisma.financialTransaction.aggregate({
-          where: { ...where, projectId: b.projectId, type: 'EXPENSE' },
+          where: { ...where, projectId: b.projectId, type: 'EXPENSE', status: 'SETTLED' },
           _sum: { amountCup: true }
         });
         return {
@@ -123,13 +262,31 @@ export default async function financeRoutes(fastify: FastifyInstance) {
       })
     );
 
+    const pendingWhere: any = { status: 'PENDING' };
+    const pendingRange = brazilDateRange(startDate, endDate);
+    if (pendingRange) pendingWhere.date = pendingRange;
+
+    const pendingIncomes = await fastify.prisma.financialTransaction.aggregate({
+      where: { ...pendingWhere, type: 'INCOME' },
+      _sum: { amountCup: true }
+    });
+
+    const pendingExpenses = await fastify.prisma.financialTransaction.aggregate({
+      where: { ...pendingWhere, type: 'EXPENSE' },
+      _sum: { amountCup: true }
+    });
+
     return {
       totalIncome: Number(incomes._sum.amountCup || 0),
       totalExpense: Number(expenses._sum.amountCup || 0),
       profit: Number(incomes._sum.amountCup || 0) - Number(expenses._sum.amountCup || 0),
-      margin: incomes._sum.amountCup ? 
+      margin: incomes._sum.amountCup ?
         ((Number(incomes._sum.amountCup) - Number(expenses._sum.amountCup)) / Number(incomes._sum.amountCup) * 100).toFixed(2) : '0',
-      byProject: projectSummary
+      byProject: projectSummary,
+      pending: {
+        income: Number(pendingIncomes._sum.amountCup || 0),
+        expense: Number(pendingExpenses._sum.amountCup || 0),
+      }
     };
   });
 

@@ -57,61 +57,94 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
-        <div className="bg-white rounded-xl shadow-lg p-8">
+    <div className="min-h-screen bg-[#070a13] flex items-center justify-center p-4 relative overflow-hidden font-sans">
+      {/* Background Glowing Ambient Orbs */}
+      <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-brand-500/20 rounded-full blur-[100px] pointer-events-none animate-glow"></div>
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-brand-600/10 rounded-full blur-[120px] pointer-events-none" style={{ animationDelay: '1.5s' }}></div>
+
+      <div className="max-w-md w-full relative z-10">
+        <div className="glass-card rounded-2xl shadow-2xl p-8 sm:p-10 border border-white/10 animate-slide-up backdrop-blur-xl">
           <div className="text-center mb-8">
-            {companyLogoUrl && <img src={companyLogoUrl} alt={companyName} className="w-14 h-14 object-contain mx-auto mb-3" />}
-            <h1 className="text-2xl font-bold text-slate-800">{companyName}</h1>
-            <p className="text-slate-500">{isRegister ? 'Criar conta' : 'Entrar'}</p>
-            <p className="text-xs text-slate-400 mt-2">{companyObjective}</p>
+            {companyLogoUrl ? (
+              <img 
+                src={companyLogoUrl} 
+                alt={companyName} 
+                className="w-16 h-16 object-contain mx-auto mb-4 p-2 bg-white/5 border border-white/10 rounded-2xl shadow-md" 
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center font-bold text-white text-3xl mx-auto mb-4 shadow-lg orange-glow">
+                {companyName?.[0] || 'W'}
+              </div>
+            )}
+            <h1 className="text-3xl font-extrabold text-white tracking-tight font-display">{companyName}</h1>
+            <p className="text-slate-400 text-sm mt-1.5 font-medium">
+              {isRegister ? 'Criar nova conta profissional' : 'Entrar na área de gestão'}
+            </p>
+            {companyObjective && (
+              <p className="text-[11px] text-slate-500 mt-2 italic px-4 leading-relaxed">
+                {companyObjective}
+              </p>
+            )}
           </div>
 
           {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm">
+            <div className="bg-red-500/10 border border-red-500/20 text-red-300 p-3.5 rounded-xl mb-5 text-xs font-medium animate-fade-in leading-relaxed">
               {error}
             </div>
           )}
 
           {info && (
-            <div className="bg-blue-50 text-blue-700 p-3 rounded-lg mb-4 text-sm">
-              {info}
-              {devCode && <span className="block mt-1 font-mono">Código dev: {devCode}</span>}
+            <div className="bg-brand-500/10 border border-brand-500/20 text-brand-300 p-3.5 rounded-xl mb-5 text-xs font-medium animate-fade-in leading-relaxed">
+              <span>{info}</span>
+              {devCode && (
+                <span className="block mt-2 font-mono text-center bg-black/30 py-1.5 rounded-lg border border-white/5">
+                  Código de dev: {devCode}
+                </span>
+              )}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {isRegister && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
+                  Nome Completo
+                </label>
                 <input
                   type="text"
+                  placeholder="Seu nome"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-3 rounded-xl border border-white/10 bg-slate-900/40 text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all text-sm"
                   required
                 />
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
+                Endereço de E-mail
+              </label>
               <input
                 type="email"
+                placeholder="seu.email@empresa.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-3 rounded-xl border border-white/10 bg-slate-900/40 text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all text-sm"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
+                Senha de Acesso
+              </label>
               <input
                 type="password"
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-3 rounded-xl border border-white/10 bg-slate-900/40 text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all text-sm"
                 required
                 minLength={6}
               />
@@ -119,14 +152,17 @@ export default function Login() {
 
             {isRegister && otpRequested && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Código OTP</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
+                  Código OTP de Verificação
+                </label>
                 <input
                   type="text"
                   inputMode="numeric"
+                  placeholder="000000"
                   pattern="\d{6}"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 tracking-[0.4em]"
+                  className="w-full px-4 py-3 rounded-xl border border-white/10 bg-slate-900/40 text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all text-center tracking-[0.3em] font-mono text-lg font-bold"
                   required
                 />
               </div>
@@ -135,28 +171,28 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              className="w-full bg-gradient-to-r from-brand-500 to-brand-600 text-white font-semibold py-3 px-4 rounded-xl hover:from-brand-600 hover:to-brand-700 shadow-lg orange-glow-hover active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none transition-all duration-300 mt-6"
             >
-              {loading ? 'Carregando...' : isRegister ? otpRequested ? 'Criar conta' : 'Enviar código OTP' : 'Entrar'}
+              {loading ? 'Processando...' : isRegister ? otpRequested ? 'Criar Conta' : 'Enviar Código OTP' : 'Acessar Painel'}
             </button>
           </form>
 
           {isRegister && otpRequested && (
             <button
               onClick={() => { setOtpRequested(false); setOtp(''); setDevCode(''); setInfo(''); }}
-              className="w-full mt-3 text-sm text-blue-600 hover:underline"
+              className="w-full mt-4 text-xs text-brand-400 hover:text-brand-300 hover:underline font-medium transition-all"
             >
-              Reenviar código
+              Não recebeu? Reenviar código OTP
             </button>
           )}
 
-          <p className="text-center mt-6 text-sm text-gray-600">
-            {isRegister ? 'Já tem uma conta?' : 'Não tem uma conta?'}{' '}
+          <p className="text-center mt-8 text-xs text-slate-400 font-medium">
+            {isRegister ? 'Já possui um cadastro?' : 'Ainda não tem conta?'}{' '}
             <button
               onClick={toggleMode}
-              className="text-blue-600 hover:underline"
+              className="text-brand-400 hover:text-brand-300 font-semibold hover:underline ml-1"
             >
-              {isRegister ? 'Entrar' : 'Cadastrar-se'}
+              {isRegister ? 'Fazer Login' : 'Cadastrar-se'}
             </button>
           </p>
         </div>

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { QueryProvider } from './hooks/useData';
+import { ToastProvider } from './hooks/useToast';
 import Login from './pages/Login';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
@@ -9,13 +10,14 @@ import ProjectManager from './pages/ProjectManager';
 import Infrastructure from './pages/Infrastructure';
 import Finances from './pages/Finances';
 import Tasks from './pages/Tasks';
-import Team from './pages/Team';
 import Reports from './pages/Reports';
 import Notifications from './pages/Notifications';
 import Chat from './pages/Chat';
-import Profile from './pages/Profile';
 import UserProfile from './pages/UserProfile';
 import Settings from './pages/Settings';
+import CRM from './pages/CRM';
+import Clients from './pages/Clients';
+import Proposals from './pages/Proposals';
 import type { ReactNode } from 'react';
 
 function PrivateRoute({ children }: { children: ReactNode }) {
@@ -45,16 +47,19 @@ function AppRoutes() {
         }
       >
         <Route index element={<Dashboard />} />
+        <Route path="crm" element={<CRM />} />
+        <Route path="clients" element={<Clients />} />
+        <Route path="proposals" element={<Proposals />} />
         <Route path="projects" element={<Projects />} />
         <Route path="projects/:id/manager" element={<ProjectManager />} />
         <Route path="infrastructure" element={<Infrastructure />} />
         <Route path="finances" element={<Finances />} />
         <Route path="tasks" element={<Tasks />} />
-        <Route path="team" element={<Team />} />
+        <Route path="team" element={<Navigate to="/settings?tab=equipe" replace />} />
         <Route path="reports" element={<Reports />} />
         <Route path="notifications" element={<Notifications />} />
         <Route path="chat" element={<Chat />} />
-        <Route path="profile" element={<Profile />} />
+        <Route path="profile" element={<Navigate to="/settings?tab=perfil" replace />} />
         <Route path="users/:id" element={<UserProfile />} />
         <Route path="settings" element={<Settings />} />
       </Route>
@@ -67,7 +72,9 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <QueryProvider>
-          <AppRoutes />
+          <ToastProvider>
+            <AppRoutes />
+          </ToastProvider>
         </QueryProvider>
       </AuthProvider>
     </BrowserRouter>

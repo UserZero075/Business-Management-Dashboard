@@ -42,7 +42,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="max-w-4xl space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-bold text-gray-800">Meu Perfil</h1>
         <p className="text-gray-500">Esta informação aparece em Equipe e Chat.</p>
@@ -65,7 +65,7 @@ export default function Profile() {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Cor do usuário</label>
           <div className="flex flex-wrap gap-2">
-            {USER_COLORS.map((color) => (
+            {USER_COLORS.map((color: string) => (
               <button
                 key={color}
                 type="button"

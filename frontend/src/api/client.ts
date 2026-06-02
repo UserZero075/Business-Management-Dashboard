@@ -1,6 +1,73 @@
 const API_URL = import.meta.env.VITE_API_URL ?? '';
 export const WS_URL = API_URL ? API_URL.replace(/^http/, 'ws') : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}`;
 
+export type ProjectStatus = 'ACTIVE' | 'PAUSED' | 'ABANDONED' | 'EXPERIMENTAL' | 'RENTABLE';
+
+export type Client = {
+  id: number;
+  name: string;
+  company?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  document?: string | null;
+  notes?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  projects?: Project[];
+  totalIncome?: number;
+  totalExpense?: number;
+  netRevenue?: number;
+};
+
+export type Project = {
+  id: number;
+  name: string;
+  description?: string | null;
+  status: ProjectStatus | string;
+  publicUrl?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  contractValue?: number | null;
+  clientId?: number | null;
+  client_id?: number | null;
+  client?: Client | null;
+  members?: any[];
+  vpsLinks?: any[];
+  infraLinks?: any[];
+  transactions?: any[];
+  tasks?: any[];
+  bugs?: any[];
+  metrics?: any[];
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type ProjectPayload = {
+  name: string;
+  description?: string | null;
+  status?: ProjectStatus | string;
+  publicUrl?: string | null;
+  responsibleIds?: number[];
+  clientId: number;
+};
+
+export type ClientPayload = {
+  name: string;
+  company?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  document?: string | null;
+  notes?: string | null;
+};
+
+export function getClientDisplayName(client?: Pick<Client, 'name' | 'company'> | null) {
+  return client?.company || client?.name || 'Cliente sem nome';
+}
+
+export function getProjectClientId(project?: Pick<Project, 'clientId' | 'client_id'> | null) {
+  return project?.clientId ?? project?.client_id ?? null;
+}
+
 class ApiClient {
   private token: string | null = null;
 
@@ -65,6 +132,13 @@ class ApiClient {
   delete<T>(endpoint: string) {
     return this.request<T>(endpoint, { method: 'DELETE' });
   }
+
+  patch<T>(endpoint: string, data?: unknown) {
+    return this.request<T>(endpoint, {
+      method: 'PATCH',
+      body: JSON.stringify(data ?? {}),
+    });
+  }
 }
 
 export const api = new ApiClient();
@@ -90,10 +164,10 @@ export const companyApi = {
 };
 
 export const projectApi = {
-  getAll: () => api.get<any[]>('/api/projects'),
-  getOne: (id: number) => api.get<any>(`/api/projects/${id}`),
-  create: (data: any) => api.post<any>('/api/projects', data),
-  update: (id: number, data: any) => api.put<any>(`/api/projects/${id}`, data),
+  getAll: () => api.get<Project[]>('/api/projects'),
+  getOne: (id: number) => api.get<Project>(`/api/projects/${id}`),
+  create: (data: ProjectPayload | any) => api.post<Project>('/api/projects', data),
+  update: (id: number, data: Partial<ProjectPayload> | any) => api.put<Project>(`/api/projects/${id}`, data),
   delete: (id: number) => api.delete(`/api/projects/${id}`),
   addMember: (projectId: number, userId: number, role?: string) =>
     api.post<any>(`/api/projects/${projectId}/members`, { userId, role }),
@@ -114,7 +188,10 @@ export const projectApi = {
 
 export const vpsApi = {
   getProviders: () => api.get<any[]>('/api/vps/providers'),
+  getProvider: (id: number) => api.get<any>(`/api/vps/providers/${id}`),
   createProvider: (data: any) => api.post<any>('/api/vps/providers', data),
+  updateProvider: (id: number, data: any) => api.put<any>(`/api/vps/providers/${id}`, data),
+  deleteProvider: (id: number) => api.delete<any>(`/api/vps/providers/${id}`),
   getServers: () => api.get<any[]>('/api/vps/servers'),
   getServer: (id: number) => api.get<any>(`/api/vps/servers/${id}`),
   createServer: (data: any) => api.post<any>('/api/vps/servers', data),
@@ -122,19 +199,26 @@ export const vpsApi = {
   deleteServer: (id: number) => api.delete<any>(`/api/vps/servers/${id}`),
   linkServer: (serverId: number, projectId: number, costShare?: number) =>
     api.post<any>(`/api/vps/servers/${serverId}/link`, { projectId, costShare }),
+  unlinkServer: (serverId: number, projectId: number) =>
+    api.delete<any>(`/api/vps/servers/${serverId}/link/${projectId}`),
   getItems: () => api.get<any[]>('/api/vps/items'),
   createItem: (data: any) => api.post<any>('/api/vps/items', data),
   updateItem: (id: number, data: any) => api.put<any>(`/api/vps/items/${id}`, data),
   deleteItem: (id: number) => api.delete<any>(`/api/vps/items/${id}`),
   linkItem: (itemId: number, projectId: number, costShare?: number) =>
     api.post<any>(`/api/vps/items/${itemId}/link`, { projectId, costShare }),
+  unlinkItem: (itemId: number, projectId: number) =>
+    api.delete<any>(`/api/vps/items/${itemId}/link/${projectId}`),
   getCosts: () => api.get<any>('/api/vps/costs'),
 };
 
 export const financeApi = {
   getTransactions: (params?: any) => api.get<any[]>(`/api/finance/transactions${params ? '?' + new URLSearchParams(params).toString() : ''}`),
+  getTransaction: (id: number) => api.get<any>(`/api/finance/transactions/${id}`),
   createTransaction: (data: any) => api.post<any>('/api/finance/transactions', data),
+  updateTransaction: (id: number, data: any) => api.put<any>(`/api/finance/transactions/${id}`, data),
   deleteTransaction: (id: number) => api.delete<any>(`/api/finance/transactions/${id}`),
+  settleTransaction: (id: number, data?: { paymentDate?: string }) => api.patch<any>(`/api/finance/transactions/${id}/settle`, data || {}),
   getSummary: (params?: any) => api.get<any>(`/api/finance/summary${params ? '?' + new URLSearchParams(params).toString() : ''}`),
   getRates: () => api.get<any[]>('/api/finance/rates'),
   createRate: (data: { code: string; rate: number; source?: string }) => api.post<any>('/api/finance/rates', data),
@@ -173,4 +257,28 @@ export const chatApi = {
   getMessages: (channelId: number) => api.get<any[]>(`/api/chat/channels/${channelId}/messages`),
   sendMessage: (channelId: number, content: string) => api.post<any>(`/api/chat/channels/${channelId}/messages`, { content }),
   createPrivate: (userId: number) => api.post<any>('/api/chat/private', { userId }),
+};
+
+export const clientApi = {
+  getAll: () => api.get<Client[]>('/api/clients'),
+  getOne: (id: number) => api.get<Client>(`/api/clients/${id}`),
+  create: (data: ClientPayload | any) => api.post<Client>('/api/clients', data),
+  update: (id: number, data: Partial<ClientPayload> | any) => api.put<Client>(`/api/clients/${id}`, data),
+  delete: (id: number) => api.delete<any>(`/api/clients/${id}`),
+};
+
+export const leadApi = {
+  getAll: () => api.get<any[]>('/api/leads'),
+  create: (data: any) => api.post<any>('/api/leads', data),
+  update: (id: number, data: any) => api.put<any>(`/api/leads/${id}`, data),
+  updateStatus: (id: number, status: string, createProject?: boolean, projectDetails?: any) => api.put<any>(`/api/leads/${id}/status`, { status, createProject, ...projectDetails }),
+  delete: (id: number) => api.delete<any>(`/api/leads/${id}`),
+};
+
+export const proposalApi = {
+  getAll: () => api.get<any[]>('/api/proposals'),
+  create: (data: any) => api.post<any>('/api/proposals', data),
+  update: (id: number, data: any) => api.put<any>(`/api/proposals/${id}`, data),
+  updateStatus: (id: number, status: string, projectId?: number) => api.put<any>(`/api/proposals/${id}/status`, { status, projectId }),
+  delete: (id: number) => api.delete<any>(`/api/proposals/${id}`),
 };

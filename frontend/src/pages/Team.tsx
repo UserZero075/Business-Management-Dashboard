@@ -21,7 +21,7 @@ export default function Team() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-bold text-gray-800">Equipe</h1>
         <p className="text-gray-500">Membros, funções, perfis e projetos relacionados.</p>
@@ -34,11 +34,11 @@ export default function Team() {
             ['GitHub', user.githubUrl],
             ['Facebook', user.facebookUrl],
             ['LinkedIn', user.linkedinUrl],
-            ['Web', user.websiteUrl],
+            ['Site', user.websiteUrl],
           ].filter(([, url]) => url);
 
           return (
-            <div key={user.id} className="bg-white rounded-xl shadow-sm border p-6">
+            <div key={user.id} className="bg-white rounded-xl shadow-sm border p-6 transition-shadow duration-200 hover:shadow-md">
               <div className="flex items-start gap-4 mb-4">
                 <Link to={`/users/${user.id}`} className="shrink-0">
                   <Avatar user={user} size={52} />

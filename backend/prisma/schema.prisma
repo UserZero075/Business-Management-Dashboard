@@ -46,9 +46,14 @@ model Project {
   description      String?
   status           String            @default("ACTIVE")
   publicUrl        String?
+  startDate        DateTime?
+  endDate          DateTime?
+  contractValue    Float?
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 
+  clientId         Int
+  client           Client            @relation(fields: [clientId], references: [id])
   members          ProjectMember[]
   vpsLinks         ProjectVpsLink[]
   infraLinks       ProjectInfraLink[]
@@ -90,6 +95,7 @@ model VpsServer {
   cost        Float
   currency    String    @default("USD")
   billingCycle String   @default("monthly")
+  startDate   DateTime?
   renewalDate DateTime?
   specs       String?
   notes       String?
@@ -118,6 +124,7 @@ model InfrastructureItem {
   cost         Float
   currency     String   @default("USD")
   billingCycle String   @default("monthly")
+  startDate    DateTime?
   renewalDate  DateTime?
   providerId   Int?
   provider     Provider? @relation(fields: [providerId], references: [id])
@@ -159,18 +166,24 @@ model ExchangeRate {
 }
 
 model FinancialTransaction {
-  id          Int           @id @default(autoincrement())
-  projectId   Int?
-  project     Project?      @relation(fields: [projectId], references: [id])
-  type        String
-  amount      Float
-  currency    String        @default("USD")
-  amountCup   Float?
+  id               Int           @id @default(autoincrement())
+  projectId        Int?
+  project          Project?      @relation(fields: [projectId], references: [id])
+  clientId         Int?
+  client           Client?       @relation(fields: [clientId], references: [id])
+  type             String
+  amount           Float
+  currency         String        @default("USD")
+  amountCup        Float?
   exchangeRateUsed Float?
-  description String?
-  date        DateTime      @default(now())
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  category         String?
+  description      String?
+  status           String        @default("SETTLED")
+  date             DateTime      @default(now())
+  dueDate          DateTime?
+  paymentDate      DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 }
 
 model Task {
@@ -280,4 +293,58 @@ model EmailOtp {
   createdAt DateTime @default(now())
 
   @@index([email])
+}
+
+model Client {
+  id           Int                    @id @default(autoincrement())
+  name         String
+  email        String?
+  phone        String?
+  company      String?
+  document     String?
+  notes        String?
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  projects     Project[]
+  transactions FinancialTransaction[]
+  proposals    Proposal[]
+  leads        Lead[]
+}
+
+model Lead {
+  id        Int        @id @default(autoincrement())
+  name      String
+  email     String?
+  phone     String?
+  company   String?
+  status    String     @default("NEW")
+  value     Float?
+  notes     String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  clientId  Int?
+  client    Client?    @relation(fields: [clientId], references: [id])
+  proposals Proposal[]
+}
+
+model Proposal {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  value       Float
+  validUntil  DateTime?
+  clientName  String?
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  clientId    Int?
+  client      Client?  @relation(fields: [clientId], references: [id])
+  leadId      Int?
+  lead        Lead?    @relation(fields: [leadId], references: [id])
+}
+
+model Contract {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
 import { logActivity } from '../services/activity.js';
+import { parseBrazilDateOnly } from '../utils/dates.js';
 
 const taskSchema = z.object({
   projectId: z.number(),
@@ -47,7 +48,7 @@ export default async function taskRoutes(fastify: FastifyInstance) {
       data: {
         ...data,
         assigneeId: data.assigneeId || null,
-        dueDate: data.dueDate ? new Date(data.dueDate) : null,
+        dueDate: parseBrazilDateOnly(data.dueDate),
         creatorId: (request.user as any).id
       }
     });
@@ -68,7 +69,7 @@ export default async function taskRoutes(fastify: FastifyInstance) {
     const data = taskSchema.partial().parse(request.body);
 
     const updateData: any = { ...data };
-    if (data.dueDate) updateData.dueDate = new Date(data.dueDate);
+    if (data.dueDate) updateData.dueDate = parseBrazilDateOnly(data.dueDate);
     if (data.status === 'COMPLETED') updateData.completedAt = new Date();
 
     const task = await fastify.prisma.task.update({

@@ -21,11 +21,11 @@ export default function UserProfile() {
     ['GitHub', user.githubUrl],
     ['Facebook', user.facebookUrl],
     ['LinkedIn', user.linkedinUrl],
-    ['Web', user.websiteUrl],
+    ['Site', user.websiteUrl],
   ].filter(([, url]) => url);
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6 max-w-5xl animate-fade-in">
       <Link to="/team" className="inline-flex items-center gap-2 text-sm text-blue-600 hover:underline">
         <ArrowLeft size={16} /> Voltar para a equipe
       </Link>

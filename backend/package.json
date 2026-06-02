@@ -10,7 +10,11 @@
     "start": "node dist/index.js",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
-    "db:migrate": "prisma migrate dev"
+    "db:migrate": "prisma migrate dev",
+    "reset:operational-data": "tsx src/scripts/resetOperationalData.ts",
+    "reset:operational-data:dist": "node dist/scripts/resetOperationalData.js",
+    "normalize:brazil-dates": "tsx src/scripts/normalizeBrazilDates.ts",
+    "normalize:brazil-dates:dist": "node dist/scripts/normalizeBrazilDates.js"
   },
   "dependencies": {
     "@fastify/cors": "^9.0.1",
