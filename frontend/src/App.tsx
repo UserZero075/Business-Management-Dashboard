@@ -18,6 +18,7 @@ import Settings from './pages/Settings';
 import CRM from './pages/CRM';
 import Clients from './pages/Clients';
 import Proposals from './pages/Proposals';
+import ProposalDocument from './pages/ProposalDocument';
 import type { ReactNode } from 'react';
 
 function PrivateRoute({ children }: { children: ReactNode }) {
@@ -52,6 +53,7 @@ function AppRoutes() {
         <Route path="proposals" element={<Proposals />} />
         <Route path="projects" element={<Projects />} />
         <Route path="projects/:id/manager" element={<ProjectManager />} />
+        <Route path="proposals/:id/view" element={<ProposalDocument />} />
         <Route path="infrastructure" element={<Infrastructure />} />
         <Route path="finances" element={<Finances />} />
         <Route path="tasks" element={<Tasks />} />

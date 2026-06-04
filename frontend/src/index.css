@@ -424,3 +424,20 @@ input, textarea, select {
 a {
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* === Print / PDF Export === */
+@media print {
+  body { background: #fff; }
+  /* Hide app chrome: sidebar (aside), sticky header (header), print button (.no-print) */
+  .no-print,
+  aside,
+  header { display: none !important; }
+  /* Reset layout margins set by md:ml-64 and padding from the content wrapper */
+  main { margin-left: 0 !important; }
+  .proposal-doc {
+    box-shadow: none;
+    margin: 0;
+    padding: 0;
+    max-width: 100%;
+  }
+}
