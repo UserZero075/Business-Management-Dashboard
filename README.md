@@ -167,6 +167,14 @@ O frontend usa API relativa por padrão em produção. Em desenvolvimento, com s
 - CSS otimizado para alertas, cores e barras de rolagem
 - Layout responsivo para mobile
 
+### Propostas (v2)
+
+- Tipos de proposta configuráveis em **Configurações → "Tipos de Proposta"** (ex: ERP, Website, Automação, Robôs); cada tipo define itens de escopo padrão, campos-chave tipados, blocos de texto e precificação base.
+- Proposta com itens de linha (quantidade, desconto e imposto por item) e totais calculados automaticamente (subtotal, descontos, impostos e total final).
+- Campos-chave com placeholders `{{chave}}` que são substituídos no documento apresentável.
+- Documento de proposta acessível em `/proposals/:id/view`, exportável em PDF pelo navegador via `window.print` com folha de estilo de impressão dedicada.
+- Ciclo de vida gerenciado: **DRAFT → SENT → ACCEPTED | REJECTED | EXPIRED**; ao aceitar uma proposta, o sistema cria ou atualiza o projeto vinculado e gera automaticamente uma transação de receita associada ao `proposalId` usando o total da proposta.
+
 ### Relatórios
 
 - Gráfico de receitas e despesas dos últimos 12 meses
@@ -297,6 +305,20 @@ O script detecta o sistema operacional, instala Node.js se necessário, instala 
 
 - `GET /api/settings/company` - Ver configuração da empresa
 - `PUT /api/settings/company` - Atualizar empresa
+
+### CRM — Propostas
+
+- `GET /api/proposal-types` - Listar tipos de proposta
+- `POST /api/proposal-types` - Criar tipo de proposta
+- `GET /api/proposal-types/:id` - Ver tipo de proposta
+- `PUT /api/proposal-types/:id` - Atualizar tipo de proposta
+- `DELETE /api/proposal-types/:id` - Excluir tipo de proposta
+- `GET /api/proposals` - Listar propostas
+- `POST /api/proposals` - Criar proposta a partir de snapshot de um `typeId`
+- `GET /api/proposals/:id` - Ver proposta (inclui itens de linha, campos-chave e blocos de texto)
+- `PUT /api/proposals/:id` - Atualizar proposta
+- `DELETE /api/proposals/:id` - Excluir proposta
+- `PUT /api/proposals/:id/status` - Alterar ciclo de vida (DRAFT → SENT → ACCEPTED | REJECTED | EXPIRED); ao aceitar, cria/atualiza projeto e gera transação de receita vinculada
 
 ## Estado do Projeto
 
