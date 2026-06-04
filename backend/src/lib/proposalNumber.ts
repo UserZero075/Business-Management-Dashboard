@@ -1,14 +1,17 @@
 import type { PrismaClient } from '@prisma/client';
 
 // Gera "P-AAAA-NNN" sequencial por ano com base no maior número existente.
+// Usa o máximo NUMÉRICO (não ordenação lexicográfica) para continuar correto
+// mesmo quando a sequência passa de 3 dígitos.
 export async function nextProposalNumber(prisma: PrismaClient, year: number): Promise<string> {
   const prefix = `P-${year}-`;
-  const last = await prisma.proposal.findFirst({
+  const existing = await prisma.proposal.findMany({
     where: { number: { startsWith: prefix } },
-    orderBy: { number: 'desc' },
     select: { number: true },
   });
-  const lastSeq = last?.number ? parseInt(last.number.slice(prefix.length), 10) : 0;
-  const seq = (Number.isFinite(lastSeq) ? lastSeq : 0) + 1;
-  return `${prefix}${String(seq).padStart(3, '0')}`;
+  const maxSeq = existing.reduce((max, p) => {
+    const seq = p.number ? parseInt(p.number.slice(prefix.length), 10) : 0;
+    return Number.isFinite(seq) && seq > max ? seq : max;
+  }, 0);
+  return `${prefix}${String(maxSeq + 1).padStart(3, '0')}`;
 }
