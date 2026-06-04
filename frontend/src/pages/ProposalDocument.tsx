@@ -28,7 +28,7 @@ export default function ProposalDocument() {
 
   return (
     <div className="proposal-doc max-w-3xl mx-auto bg-white text-slate-800 p-10">
-      <header className="flex items-center justify-between border-b pb-4 mb-6">
+      <div className="flex items-center justify-between border-b pb-4 mb-6">
         <div>
           {company?.companyLogoUrl && <img src={company.companyLogoUrl} alt="logo" className="h-12 mb-2" />}
           <h1 className="text-xl font-bold">{company?.companyName ?? 'Proposta'}</h1>
@@ -37,7 +37,7 @@ export default function ProposalDocument() {
           <p className="font-semibold">{proposal.number}</p>
           <p>{placeholders.validade && `Válida até ${placeholders.validade}`}</p>
         </div>
-      </header>
+      </div>
 
       <h2 className="text-2xl font-bold mb-1">{proposal.title}</h2>
       <p className="text-slate-500 mb-6">Cliente: {placeholders.cliente}</p>
