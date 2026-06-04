@@ -259,7 +259,7 @@ export default async function proposalRoutes(fastify: FastifyInstance) {
     const result = await fastify.prisma.$transaction(async (tx) => {
       const updatedProposal = await tx.proposal.update({
         where: { id },
-        data: { status }
+        data: { status, ...(isAcceptedStatus(status) ? { acceptedAt: todayBrazilDateOnly() } : {}) },
       });
 
       let transaction: any = null;
@@ -295,22 +295,8 @@ export default async function proposalRoutes(fastify: FastifyInstance) {
           }
         }
 
-        const description = proposalTransactionDescription(updatedProposal);
-        const legacyDescription = `Receita gerada a partir da aceitação da proposta: ${updatedProposal.title}`;
-
         const existingTransaction = await tx.financialTransaction.findFirst({
-          where: {
-            type: 'INCOME',
-            OR: [
-              { description },
-              { description: { contains: `proposta #${updatedProposal.id}:` } },
-              {
-                description: legacyDescription,
-                amount: updatedProposal.value,
-                clientId: resolvedClientId
-              }
-            ]
-          }
+          where: { proposalId: updatedProposal.id, type: 'INCOME' },
         });
 
         if (existingTransaction) {
@@ -322,15 +308,16 @@ export default async function proposalRoutes(fastify: FastifyInstance) {
           data: {
             projectId: resolvedProjectId || null,
             clientId: resolvedClientId,
+            proposalId: updatedProposal.id,
             type: 'INCOME',
-            amount: updatedProposal.value,
-            currency: 'BRL',
-            amountCup: updatedProposal.value,
+            amount: updatedProposal.total,
+            currency: updatedProposal.currency,
+            amountCup: updatedProposal.total,
             exchangeRateUsed: 1,
-            description,
+            description: proposalTransactionDescription(updatedProposal),
             status: 'SETTLED',
-            date: todayBrazilDateOnly()
-          }
+            date: todayBrazilDateOnly(),
+          },
         });
       }
 
