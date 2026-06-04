@@ -15,6 +15,7 @@ import settingsRoutes from "./routes/settings.js";
 import clientRoutes from "./routes/clients.js";
 import leadRoutes from "./routes/leads.js";
 import proposalRoutes from "./routes/proposals.js";
+import proposalTypeRoutes from "./routes/proposalTypes.js";
 import { bootstrapApplication } from "./services/bootstrap.js";
 import { scheduleElToqueRates } from "./services/exchangeRates.js";
 
@@ -103,6 +104,7 @@ await fastify.register(settingsRoutes, { prefix: "/api/settings" });
 await fastify.register(clientRoutes, { prefix: "/api/clients" });
 await fastify.register(leadRoutes, { prefix: "/api/leads" });
 await fastify.register(proposalRoutes, { prefix: "/api/proposals" });
+await fastify.register(proposalTypeRoutes, { prefix: "/api/proposal-types" });
 
 fastify.get("/api/health", async () => {
   return { status: "ok", timestamp: new Date().toISOString() };
