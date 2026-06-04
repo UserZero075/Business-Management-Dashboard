@@ -88,6 +88,7 @@ export default function Proposals() {
     associatedId: '' as string,
     typeId: null as number | null,
     currency: 'BRL',
+    clientName: '',
   });
   const [items, setItems] = useState<ProposalItem[]>([]);
   const [fieldValues, setFieldValues] = useState<ProposalFieldValue[]>([]);
@@ -128,6 +129,7 @@ export default function Proposals() {
       associatedId: '',
       typeId: null,
       currency: 'BRL',
+      clientName: '',
     });
     setItems([]);
     setFieldValues([]);
@@ -184,6 +186,7 @@ export default function Proposals() {
         associatedId: full.clientId ? String(full.clientId) : full.leadId ? String(full.leadId) : '',
         typeId: full.typeId ?? null,
         currency: full.currency || 'BRL',
+        clientName: full.clientName || '',
       });
       setItems(
         (full.items || []).map((it, i) => ({
@@ -232,6 +235,7 @@ export default function Proposals() {
       validUntil: form.validUntil || null,
       clientId,
       leadId,
+      clientName: form.associationType === 'manual' ? (form.clientName || null) : null,
       typeId: form.typeId,
       currency: form.currency,
       items,
@@ -337,6 +341,22 @@ export default function Proposals() {
       queryClient.invalidateQueries({ queryKey: ['proposals'] });
     } catch (err) {
       toast.error(getErrorMessage(err, 'Erro ao recusar proposta.'));
+    }
+  };
+
+  const handleStatusChange = async (
+    proposalId: number,
+    newStatus: 'SENT' | 'EXPIRED',
+    confirmMessage: string,
+    successMessage: string
+  ) => {
+    if (!window.confirm(confirmMessage)) return;
+    try {
+      await proposalApi.updateStatus(proposalId, newStatus);
+      toast.success(successMessage);
+      queryClient.invalidateQueries({ queryKey: ['proposals'] });
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Erro ao atualizar status da proposta.'));
     }
   };
 
@@ -601,8 +621,23 @@ export default function Proposals() {
                       <FileCheck size={15} />
                       Editar
                     </button>
-                    {proposal.status !== 'ACCEPTED' && proposal.status !== 'REJECTED' ? (
+                    {proposal.status === 'DRAFT' && (
                       <>
+                        <button
+                          onClick={() =>
+                            handleStatusChange(
+                              proposal.id,
+                              'SENT',
+                              'Marcar esta proposta como enviada?',
+                              'Proposta marcada como enviada.'
+                            )
+                          }
+                          className="erp-secondary-action text-xs"
+                          title="Marcar como enviada"
+                        >
+                          <FileCheck size={15} />
+                          Marcar como enviada
+                        </button>
                         <button
                           onClick={() => handleAcceptProposal(proposal)}
                           disabled={isSubmitting}
@@ -620,7 +655,43 @@ export default function Proposals() {
                           Recusar
                         </button>
                       </>
-                    ) : (
+                    )}
+                    {proposal.status === 'SENT' && (
+                      <>
+                        <button
+                          onClick={() =>
+                            handleStatusChange(
+                              proposal.id,
+                              'EXPIRED',
+                              'Marcar esta proposta como expirada?',
+                              'Proposta marcada como expirada.'
+                            )
+                          }
+                          className="erp-danger-action text-xs"
+                          title="Marcar como expirada"
+                        >
+                          <Clock size={15} />
+                          Marcar como expirada
+                        </button>
+                        <button
+                          onClick={() => handleAcceptProposal(proposal)}
+                          disabled={isSubmitting}
+                          className="erp-success-action text-xs"
+                          title="Aceitar proposta"
+                        >
+                          <CheckCircle size={15} />
+                          Aceitar
+                        </button>
+                        <button
+                          onClick={() => handleRejectProposal(proposal.id)}
+                          className="erp-danger-action text-xs"
+                          title="Rejeitar Proposta"
+                        >
+                          Recusar
+                        </button>
+                      </>
+                    )}
+                    {(proposal.status === 'ACCEPTED' || proposal.status === 'REJECTED' || proposal.status === 'EXPIRED') && (
                       <span className="text-xs text-slate-400 italic font-medium">Proposta Processada</span>
                     )}
 
@@ -739,6 +810,19 @@ export default function Proposals() {
               </div>
 
               {/* Dynamic Field Based on Association Type */}
+              {form.associationType === 'manual' && (
+                <div>
+                  <label className="erp-label">Nome do cliente</label>
+                  <input
+                    type="text"
+                    placeholder="Ex: Empresa XYZ ou nome do contato"
+                    className="erp-input"
+                    value={form.clientName}
+                    onChange={(e) => setForm({ ...form, clientName: e.target.value })}
+                  />
+                </div>
+              )}
+
               {form.associationType === 'client' && (
                 <div>
                   <label className="erp-label">Escolher Cliente Comercial *</label>
