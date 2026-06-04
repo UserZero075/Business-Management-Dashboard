@@ -6,14 +6,16 @@ import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
 import { Avatar, USER_COLORS } from '../utils/userVisuals';
 import { roleLabel } from '../utils/labels';
-import { Building2, ExternalLink, Save, Search, Settings as SettingsIcon, UserCircle, Users } from 'lucide-react';
+import { Building2, ExternalLink, FileText, Save, Search, Settings as SettingsIcon, UserCircle, Users } from 'lucide-react';
+import ProposalTypeManager from '../components/proposals/ProposalTypeManager';
 
-type SettingsTab = 'empresa' | 'perfil' | 'equipe';
+type SettingsTab = 'empresa' | 'perfil' | 'equipe' | 'tipos-proposta';
 
 const tabs: Array<{ id: SettingsTab; label: string; icon: typeof Building2 }> = [
   { id: 'empresa', label: 'Empresa', icon: Building2 },
   { id: 'perfil', label: 'Meu Perfil', icon: UserCircle },
   { id: 'equipe', label: 'Equipe', icon: Users },
+  { id: 'tipos-proposta', label: 'Tipos de Proposta', icon: FileText },
 ];
 
 export default function Settings() {
@@ -61,6 +63,7 @@ export default function Settings() {
       {activeTab === 'empresa' && <CompanySettings />}
       {activeTab === 'perfil' && <ProfileSettings />}
       {activeTab === 'equipe' && <TeamSettings />}
+      {activeTab === 'tipos-proposta' && <div className="erp-panel"><ProposalTypeManager /></div>}
     </div>
   );
 }
