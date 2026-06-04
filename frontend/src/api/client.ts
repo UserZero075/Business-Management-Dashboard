@@ -143,6 +143,76 @@ class ApiClient {
 
 export const api = new ApiClient();
 
+export type ProposalFieldType = 'text' | 'number' | 'boolean' | 'select';
+
+export type ProposalTypeField = {
+  id?: number;
+  label: string;
+  key: string;
+  fieldType: ProposalFieldType;
+  options?: string | null;
+  required: boolean;
+  order: number;
+};
+
+export type ProposalTypeTextBlock = { id?: number; title: string; content: string; order: number };
+export type ProposalTypeItem = { id?: number; description: string; qty: number; unitPrice: number; discount: number; tax: number; order: number };
+
+export type ProposalType = {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string | null;
+  active: boolean;
+  defaultCurrency: string;
+  paymentTermsDefault?: string | null;
+  fields: ProposalTypeField[];
+  textBlocks: ProposalTypeTextBlock[];
+  items: ProposalTypeItem[];
+};
+
+export type ProposalItem = {
+  id?: number;
+  description: string;
+  qty: number;
+  unitPrice: number;
+  discount: number;
+  tax: number;
+  lineTotal?: number;
+  recurring: boolean;
+  order: number;
+};
+
+export type ProposalFieldValue = { id?: number; fieldKey: string; label: string; value: string };
+export type ProposalTextBlockValue = { id?: number; title: string; content: string; order: number };
+
+export type Proposal = {
+  id: number;
+  number?: string | null;
+  title: string;
+  description?: string | null;
+  value: number;
+  subtotal: number;
+  discountTotal: number;
+  taxTotal: number;
+  total: number;
+  currency: string;
+  validUntil?: string | null;
+  clientName?: string | null;
+  status: string;
+  typeId?: number | null;
+  type?: { id: number; name: string } | null;
+  clientId?: number | null;
+  client?: Client | null;
+  leadId?: number | null;
+  lead?: { id: number; name: string; company?: string | null } | null;
+  items?: ProposalItem[];
+  fieldValues?: ProposalFieldValue[];
+  textBlocks?: ProposalTextBlockValue[];
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export const authApi = {
   login: (email: string, password: string) =>
     api.post<{ user: any; token: string }>('/api/auth/login', { email, password }),
@@ -276,9 +346,18 @@ export const leadApi = {
 };
 
 export const proposalApi = {
-  getAll: () => api.get<any[]>('/api/proposals'),
-  create: (data: any) => api.post<any>('/api/proposals', data),
-  update: (id: number, data: any) => api.put<any>(`/api/proposals/${id}`, data),
+  getAll: () => api.get<Proposal[]>('/api/proposals'),
+  get: (id: number) => api.get<Proposal>(`/api/proposals/${id}`),
+  create: (data: any) => api.post<Proposal>('/api/proposals', data),
+  update: (id: number, data: any) => api.put<Proposal>(`/api/proposals/${id}`, data),
   updateStatus: (id: number, status: string, projectId?: number) => api.put<any>(`/api/proposals/${id}/status`, { status, projectId }),
   delete: (id: number) => api.delete<any>(`/api/proposals/${id}`),
+};
+
+export const proposalTypeApi = {
+  getAll: () => api.get<ProposalType[]>('/api/proposal-types'),
+  get: (id: number) => api.get<ProposalType>(`/api/proposal-types/${id}`),
+  create: (data: any) => api.post<ProposalType>('/api/proposal-types', data),
+  update: (id: number, data: any) => api.put<ProposalType>(`/api/proposal-types/${id}`, data),
+  delete: (id: number) => api.delete<any>(`/api/proposal-types/${id}`),
 };

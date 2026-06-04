@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { leadApi, proposalApi } from '../api/client';
+import type { Proposal } from '../api/client';
 import { useToast } from '../hooks/useToast';
 import { addDaysBrazil, todayBrazilDateInput } from '../utils/dates';
 import { ViewportPortal } from '../components/ViewportPortal';
@@ -110,7 +111,7 @@ export default function CRM() {
   });
 
   // Fetch Proposals to list linked ones
-  const { data: proposals = [] } = useQuery<LeadProposal[]>({
+  const { data: proposals = [] } = useQuery<Proposal[]>({
     queryKey: ['proposals'],
     queryFn: () => proposalApi.getAll(),
   });
