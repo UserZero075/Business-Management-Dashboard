@@ -1,6 +1,19 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { proposalApi, clientApi, leadApi, projectApi } from '../api/client';
+import {
+  proposalApi,
+  proposalTypeApi,
+  clientApi,
+  leadApi,
+  projectApi,
+  type Proposal,
+  type ProposalItem,
+  type ProposalType,
+  type ProposalFieldValue,
+  type ProposalTextBlockValue,
+} from '../api/client';
+import ProposalItemsTable from '../components/proposals/ProposalItemsTable';
 import { useToast } from '../hooks/useToast';
 import {
   FileText,
@@ -16,28 +29,6 @@ import {
   Clock,
   X,
 } from 'lucide-react';
-
-interface Proposal {
-  id: number;
-  title: string;
-  value: number;
-  description?: string;
-  status: 'PENDING' | 'ACCEPTED' | 'REJECTED';
-  clientId?: number;
-  leadId?: number;
-  clientName?: string;
-  client?: {
-    id: number;
-    name?: string;
-    company?: string;
-  };
-  lead?: {
-    id: number;
-    name?: string;
-    company?: string;
-  };
-  createdAt?: string;
-}
 
 interface Project {
   id: number;
@@ -65,25 +56,42 @@ const getErrorMessage = (err: unknown, fallback: string) => {
   return err instanceof Error ? err.message : fallback;
 };
 
+const STATUS_OPTIONS = ['DRAFT', 'SENT', 'ACCEPTED', 'REJECTED', 'EXPIRED'] as const;
+
+const STATUS_LABELS: Record<string, string> = {
+  DRAFT: 'Rascunho',
+  SENT: 'Enviada',
+  ACCEPTED: 'Aceita',
+  REJECTED: 'Recusada',
+  EXPIRED: 'Expirada',
+};
+
 export default function Proposals() {
   const queryClient = useQueryClient();
   const toast = useToast();
+  const navigate = useNavigate();
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [acceptingProposal, setAcceptingProposal] = useState<Proposal | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState('');
 
-  // Form states for manually creating proposal
+  // Form states for creating/editing a proposal
   const [form, setForm] = useState({
     title: '',
-    value: 0,
     description: '',
+    validUntil: '',
     associationType: 'manual' as 'manual' | 'client' | 'lead',
     associatedId: '' as string,
+    typeId: null as number | null,
+    currency: 'BRL',
   });
+  const [items, setItems] = useState<ProposalItem[]>([]);
+  const [fieldValues, setFieldValues] = useState<ProposalFieldValue[]>([]);
+  const [textBlocks, setTextBlocks] = useState<ProposalTextBlockValue[]>([]);
 
   // Queries
   const { data: proposals = [], isLoading } = useQuery<Proposal[]>({
@@ -106,20 +114,100 @@ export default function Proposals() {
     queryFn: () => projectApi.getAll(),
   });
 
+  const { data: proposalTypes = [] } = useQuery<ProposalType[]>({
+    queryKey: ['proposalTypes'],
+    queryFn: () => proposalTypeApi.getAll(),
+  });
+
   const resetForm = () => {
     setForm({
       title: '',
-      value: 0,
       description: '',
+      validUntil: '',
       associationType: 'manual',
       associatedId: '',
+      typeId: null,
+      currency: 'BRL',
     });
+    setItems([]);
+    setFieldValues([]);
+    setTextBlocks([]);
+    setEditingId(null);
+  };
+
+  // Populate the form from a chosen proposal type (creation flow).
+  const applyType = async (typeId: number | null) => {
+    if (!typeId) {
+      setForm((f) => ({ ...f, typeId: null }));
+      setItems([]);
+      setFieldValues([]);
+      setTextBlocks([]);
+      return;
+    }
+    try {
+      const type = await proposalTypeApi.get(typeId);
+      setForm((f) => ({ ...f, typeId, currency: type.defaultCurrency || 'BRL' }));
+      setItems(
+        type.items.map((it, i) => ({
+          description: it.description,
+          qty: it.qty,
+          unitPrice: it.unitPrice,
+          discount: it.discount,
+          tax: it.tax,
+          recurring: false,
+          order: it.order ?? i,
+        }))
+      );
+      setFieldValues(type.fields.map((f) => ({ fieldKey: f.key, label: f.label, value: '' })));
+      setTextBlocks(
+        type.textBlocks.map((b, i) => ({ title: b.title, content: b.content, order: b.order ?? i }))
+      );
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Erro ao carregar tipo de proposta.'));
+    }
+  };
+
+  const openCreateModal = () => {
+    resetForm();
+    setShowCreateModal(true);
+  };
+
+  const openEditModal = async (proposal: Proposal) => {
+    try {
+      const full = await proposalApi.get(proposal.id);
+      setEditingId(full.id);
+      setForm({
+        title: full.title || '',
+        description: full.description || '',
+        validUntil: full.validUntil ? full.validUntil.slice(0, 10) : '',
+        associationType: full.clientId ? 'client' : full.leadId ? 'lead' : 'manual',
+        associatedId: full.clientId ? String(full.clientId) : full.leadId ? String(full.leadId) : '',
+        typeId: full.typeId ?? null,
+        currency: full.currency || 'BRL',
+      });
+      setItems(
+        (full.items || []).map((it, i) => ({
+          description: it.description,
+          qty: it.qty,
+          unitPrice: it.unitPrice,
+          discount: it.discount,
+          tax: it.tax,
+          recurring: it.recurring ?? false,
+          order: it.order ?? i,
+        }))
+      );
+      setFieldValues((full.fieldValues || []).map((fv) => ({ fieldKey: fv.fieldKey, label: fv.label, value: fv.value })));
+      setTextBlocks((full.textBlocks || []).map((b, i) => ({ title: b.title, content: b.content, order: b.order ?? i })));
+      setShowCreateModal(true);
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Erro ao carregar proposta.'));
+    }
   };
 
   const handleCreateProposal = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.title || form.value <= 0) {
-      toast.error('Título e valor são obrigatórios.');
+    if (!form.title) {
+      toast.error('O título é obrigatório.');
       return;
     }
 
@@ -138,22 +226,34 @@ export default function Proposals() {
       }
     }
 
+    const payload = {
+      title: form.title,
+      description: form.description,
+      validUntil: form.validUntil || null,
+      clientId,
+      leadId,
+      typeId: form.typeId,
+      currency: form.currency,
+      items,
+      fieldValues,
+      textBlocks,
+    };
+
     setIsSubmitting(true);
     try {
-      await proposalApi.create({
-        title: form.title,
-        value: form.value,
-        description: form.description,
-        clientId,
-        leadId,
-      });
+      if (editingId) {
+        await proposalApi.update(editingId, payload);
+        toast.success('Proposta atualizada com sucesso!');
+      } else {
+        await proposalApi.create({ ...payload, status: 'DRAFT' });
+        toast.success('Proposta comercial registrada com sucesso!');
+      }
 
-      toast.success('Proposta comercial registrada com sucesso!');
       setShowCreateModal(false);
       resetForm();
       queryClient.invalidateQueries({ queryKey: ['proposals'] });
     } catch (err) {
-      toast.error(getErrorMessage(err, 'Erro ao criar proposta.'));
+      toast.error(getErrorMessage(err, 'Erro ao salvar proposta.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -184,7 +284,7 @@ export default function Proposals() {
     try {
       await proposalApi.updateStatus(proposal.id, 'ACCEPTED', projectId);
 
-      toast.success(`Proposta aceita com valor estimado de ${formatBRL(proposal.value)}.`);
+      toast.success(`Proposta aceita com valor estimado de ${formatBRL(proposal.total)}.`);
       queryClient.invalidateQueries({ queryKey: ['proposals'] });
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['finance-summary'] });
@@ -256,13 +356,13 @@ export default function Proposals() {
   };
 
   // KPIs
-  const totalProposed = proposals.reduce((acc, curr) => acc + (Number(curr.value) || 0), 0);
+  const totalProposed = proposals.reduce((acc, curr) => acc + (Number(curr.total) || 0), 0);
   const totalAccepted = proposals
     .filter((p) => p.status === 'ACCEPTED')
-    .reduce((acc, curr) => acc + (Number(curr.value) || 0), 0);
+    .reduce((acc, curr) => acc + (Number(curr.total) || 0), 0);
   const totalPending = proposals
-    .filter((p) => p.status === 'PENDING')
-    .reduce((acc, curr) => acc + (Number(curr.value) || 0), 0);
+    .filter((p) => p.status === 'DRAFT' || p.status === 'SENT')
+    .reduce((acc, curr) => acc + (Number(curr.total) || 0), 0);
 
   const filteredProposals = proposals.filter((p) => {
     const partyName = getProposalPartyName(p);
@@ -281,19 +381,31 @@ export default function Proposals() {
       case 'ACCEPTED':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20 border border-emerald-200/50">
-            <CheckCircle size={12} /> Aceita
+            <CheckCircle size={12} /> {STATUS_LABELS.ACCEPTED}
           </span>
         );
       case 'REJECTED':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-600 dark:bg-rose-950/20 border border-rose-200/50">
-            <XCircle size={12} /> Recusada
+            <XCircle size={12} /> {STATUS_LABELS.REJECTED}
+          </span>
+        );
+      case 'EXPIRED':
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-500 dark:bg-slate-900/40 border border-slate-200/50">
+            <Clock size={12} /> {STATUS_LABELS.EXPIRED}
+          </span>
+        );
+      case 'SENT':
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-600 dark:bg-blue-950/20 border border-blue-200/50">
+            <FileCheck size={12} /> {STATUS_LABELS.SENT}
           </span>
         );
       default:
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-600 dark:bg-amber-950/20 border border-amber-200/50">
-            <Clock size={12} /> Pendente
+            <Clock size={12} /> {STATUS_LABELS.DRAFT}
           </span>
         );
     }
@@ -314,10 +426,7 @@ export default function Proposals() {
           </p>
         </div>
         <button
-          onClick={() => {
-            resetForm();
-            setShowCreateModal(true);
-          }}
+          onClick={openCreateModal}
           className="erp-primary-action"
         >
           <Plus size={20} />
@@ -400,9 +509,11 @@ export default function Proposals() {
             onChange={(e) => setStatusFilter(e.target.value)}
           >
             <option value="ALL">Todas as Propostas</option>
-            <option value="PENDING">Pendentes</option>
-            <option value="ACCEPTED">Aceitas</option>
-            <option value="REJECTED">Recusadas</option>
+            {STATUS_OPTIONS.map((s) => (
+              <option key={s} value={s}>
+                {STATUS_LABELS[s]}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -464,15 +575,33 @@ export default function Proposals() {
                 {/* Right Area: value & interactive action triggers */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between md:justify-end gap-4 border-t md:border-t-0 pt-3 md:pt-0">
                   <div className="text-left md:text-right">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Valor Estimado</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                      {proposal.number ? `Nº ${proposal.number}` : 'Valor Estimado'}
+                    </p>
                     <p className="font-extrabold text-xl text-brand-600 dark:text-orange-400 font-mono mt-0.5">
-                      {formatBRL(proposal.value)}
+                      {formatBRL(proposal.total)}
                     </p>
                   </div>
 
                   {/* Actions depending on proposal status */}
-                  <div className="flex items-center gap-2">
-                    {proposal.status === 'PENDING' ? (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      onClick={() => navigate(`/proposals/${proposal.id}/view`)}
+                      className="erp-secondary-action text-xs"
+                      title="Visualizar documento"
+                    >
+                      <FileText size={15} />
+                      Visualizar
+                    </button>
+                    <button
+                      onClick={() => openEditModal(proposal)}
+                      className="erp-secondary-action text-xs"
+                      title="Editar proposta"
+                    >
+                      <FileCheck size={15} />
+                      Editar
+                    </button>
+                    {proposal.status !== 'ACCEPTED' && proposal.status !== 'REJECTED' ? (
                       <>
                         <button
                           onClick={() => handleAcceptProposal(proposal)}
@@ -511,15 +640,15 @@ export default function Proposals() {
         </div>
       )}
 
-      {/* Manual Creation Modal */}
+      {/* Creation / Edit Modal */}
       {showCreateModal && (
         <div className="erp-modal-overlay" onClick={() => setShowCreateModal(false)}>
-          <div className="erp-modal max-w-lg animate-slide-up" onClick={(event) => event.stopPropagation()}>
-            
+          <div className="erp-modal max-w-3xl animate-slide-up" onClick={(event) => event.stopPropagation()}>
+
             <div className="erp-modal-header">
               <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
                 <FileCheck className="text-brand-500" size={22} />
-                Lançar Proposta Comercial
+                {editingId ? 'Editar Proposta Comercial' : 'Lançar Proposta Comercial'}
               </h3>
               <button type="button" onClick={() => setShowCreateModal(false)} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800">
                 <X size={20} />
@@ -528,7 +657,25 @@ export default function Proposals() {
 
             <form onSubmit={handleCreateProposal} className="flex min-h-0 flex-1 flex-col">
               <div className="erp-modal-body">
-              
+
+              {!editingId && (
+                <div>
+                  <label className="erp-label">Tipo de Proposta</label>
+                  <select
+                    className="erp-input"
+                    value={form.typeId ?? ''}
+                    onChange={(e) => applyType(e.target.value ? Number(e.target.value) : null)}
+                  >
+                    <option value="">Em branco</option>
+                    {proposalTypes.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div>
                 <label className="erp-label">Título do Escopo Comercial *</label>
                 <input
@@ -538,6 +685,16 @@ export default function Proposals() {
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
                   required
+                />
+              </div>
+
+              <div>
+                <label className="erp-label">Válida até</label>
+                <input
+                  type="date"
+                  className="erp-input"
+                  value={form.validUntil}
+                  onChange={(e) => setForm({ ...form, validUntil: e.target.value })}
                 />
               </div>
 
@@ -621,18 +778,6 @@ export default function Proposals() {
               )}
 
               <div>
-                <label className="erp-label">Valor Estimado da Proposta (R$) *</label>
-                <input
-                  type="number"
-                  placeholder="0.00"
-                  className="erp-input font-mono"
-                  value={form.value || ''}
-                  onChange={(e) => setForm({ ...form, value: Number(e.target.value) })}
-                  required
-                />
-              </div>
-
-              <div>
                 <label className="erp-label">Detalhamento Técnico & Escopo da Proposta</label>
                 <textarea
                   placeholder="Defina o escopo, cronograma resumido, prazos de entrega ou descontos aplicados..."
@@ -641,6 +786,48 @@ export default function Proposals() {
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                 />
               </div>
+
+              {fieldValues.length > 0 && (
+                <div className="space-y-3">
+                  <label className="erp-label">Campos-chave</label>
+                  {fieldValues.map((fv, i) => (
+                    <div key={fv.fieldKey || i}>
+                      <label className="erp-label text-xs">{fv.label}</label>
+                      <input
+                        type="text"
+                        className="erp-input"
+                        value={fv.value}
+                        onChange={(e) =>
+                          setFieldValues(fieldValues.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)))
+                        }
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div>
+                <label className="erp-label">Itens</label>
+                <ProposalItemsTable items={items} currency={form.currency} onChange={setItems} />
+              </div>
+
+              {textBlocks.length > 0 && (
+                <div className="space-y-3">
+                  <label className="erp-label">Blocos de texto</label>
+                  {textBlocks.map((b, i) => (
+                    <div key={i}>
+                      <label className="erp-label text-xs">{b.title}</label>
+                      <textarea
+                        className="erp-input min-h-[80px]"
+                        value={b.content}
+                        onChange={(e) =>
+                          setTextBlocks(textBlocks.map((x, j) => (j === i ? { ...x, content: e.target.value } : x)))
+                        }
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
               </div>
 
               <div className="erp-modal-footer">
@@ -656,7 +843,7 @@ export default function Proposals() {
                   disabled={isSubmitting}
                   className="erp-primary-action"
                 >
-                  {isSubmitting ? 'Registrando...' : 'Lançar Proposta'}
+                  {isSubmitting ? 'Salvando...' : editingId ? 'Salvar Alterações' : 'Lançar Proposta'}
                 </button>
               </div>
             </form>
@@ -703,7 +890,7 @@ export default function Proposals() {
                 <div className="rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/40 p-3">
                   <p className="text-xs font-bold text-slate-700 dark:text-slate-200">{acceptingProposal.title}</p>
                   <p className="text-sm font-extrabold text-brand-600 dark:text-orange-400 font-mono mt-1">
-                    {formatBRL(acceptingProposal.value)}
+                    {formatBRL(acceptingProposal.total)}
                   </p>
                 </div>
               </div>
