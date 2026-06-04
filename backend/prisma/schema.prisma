@@ -184,6 +184,8 @@ model FinancialTransaction {
   paymentDate      DateTime?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
+  proposalId       Int?
+  proposal         Proposal?     @relation(fields: [proposalId], references: [id])
 }
 
 model Task {
@@ -328,23 +330,119 @@ model Lead {
 }
 
 model Proposal {
-  id          Int      @id @default(autoincrement())
-  title       String
-  description String?
-  value       Float
-  validUntil  DateTime?
-  clientName  String?
-  status      String   @default("PENDING")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  clientId    Int?
-  client      Client?  @relation(fields: [clientId], references: [id])
-  leadId      Int?
-  lead        Lead?    @relation(fields: [leadId], references: [id])
+  id            Int      @id @default(autoincrement())
+  number        String?  @unique
+  title         String
+  description   String?
+  value         Float    @default(0)   // mantido em sincronia com total (compatibilidade)
+  subtotal      Float    @default(0)
+  discountTotal Float    @default(0)
+  taxTotal      Float    @default(0)
+  total         Float    @default(0)
+  currency      String   @default("BRL")
+  validUntil    DateTime?
+  clientName    String?
+  status        String   @default("DRAFT") // DRAFT | SENT | ACCEPTED | REJECTED | EXPIRED
+  sentAt        DateTime?
+  acceptedAt    DateTime?
+  publicToken   String?  @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  clientId      Int?
+  client        Client?  @relation(fields: [clientId], references: [id])
+  leadId        Int?
+  lead          Lead?    @relation(fields: [leadId], references: [id])
+  typeId        Int?
+  type          ProposalType? @relation(fields: [typeId], references: [id])
+  items         ProposalItem[]
+  fieldValues   ProposalFieldValue[]
+  textBlocks    ProposalTextBlock[]
+  transactions  FinancialTransaction[]
 }
 
 model Contract {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model ProposalType {
+  id                  Int                     @id @default(autoincrement())
+  name                String
+  slug                String                  @unique
+  description         String?
+  active              Boolean                 @default(true)
+  defaultCurrency     String                  @default("BRL")
+  paymentTermsDefault String?
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+  fields              ProposalTypeField[]
+  textBlocks          ProposalTypeTextBlock[]
+  items               ProposalTypeItem[]
+  proposals           Proposal[]
+}
+
+model ProposalTypeField {
+  id        Int          @id @default(autoincrement())
+  typeId    Int
+  type      ProposalType @relation(fields: [typeId], references: [id], onDelete: Cascade)
+  label     String
+  key       String
+  fieldType String       @default("text") // text | number | boolean | select
+  options   String?      // JSON com as opções quando fieldType = select
+  required  Boolean      @default(false)
+  order     Int          @default(0)
+}
+
+model ProposalTypeTextBlock {
+  id      Int          @id @default(autoincrement())
+  typeId  Int
+  type    ProposalType @relation(fields: [typeId], references: [id], onDelete: Cascade)
+  title   String
+  content String       @default("")
+  order   Int          @default(0)
+}
+
+model ProposalTypeItem {
+  id          Int          @id @default(autoincrement())
+  typeId      Int
+  type        ProposalType @relation(fields: [typeId], references: [id], onDelete: Cascade)
+  description String
+  qty         Float        @default(1)
+  unitPrice   Float        @default(0)
+  discount    Float        @default(0)
+  tax         Float        @default(0)
+  order       Int          @default(0)
+}
+
+model ProposalItem {
+  id          Int      @id @default(autoincrement())
+  proposalId  Int
+  proposal    Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  description String
+  qty         Float    @default(1)
+  unitPrice   Float    @default(0)
+  discount    Float    @default(0)
+  tax         Float    @default(0)
+  lineTotal   Float    @default(0)
+  recurring   Boolean  @default(false)
+  order       Int      @default(0)
+}
+
+model ProposalFieldValue {
+  id         Int      @id @default(autoincrement())
+  proposalId Int
+  proposal   Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  fieldKey   String
+  label      String
+  value      String   @default("")
+}
+
+model ProposalTextBlock {
+  id         Int      @id @default(autoincrement())
+  proposalId Int
+  proposal   Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  title      String
+  content    String   @default("")
+  order      Int      @default(0)
 }
