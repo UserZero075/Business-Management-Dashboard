@@ -392,6 +392,8 @@ model ProposalTypeField {
   options   String?      // JSON com as opções quando fieldType = select
   required  Boolean      @default(false)
   order     Int          @default(0)
+
+  @@unique([typeId, key])
 }
 
 model ProposalTypeTextBlock {
@@ -436,6 +438,8 @@ model ProposalFieldValue {
   fieldKey   String
   label      String
   value      String   @default("")
+
+  @@unique([proposalId, fieldKey])
 }
 
 model ProposalTextBlock {
