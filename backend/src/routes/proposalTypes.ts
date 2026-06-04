@@ -46,6 +46,18 @@ function slugify(name: string): string {
     .replace(/(^-|-$)/g, '');
 }
 
+async function uniqueSlug(prisma: FastifyInstance['prisma'], name: string): Promise<string> {
+  const base = slugify(name) || 'tipo';
+  let candidate = base;
+  let n = 1;
+  // Loop until we find a slug not already taken.
+  while (await prisma.proposalType.findUnique({ where: { slug: candidate } })) {
+    n += 1;
+    candidate = `${base}-${n}`;
+  }
+  return candidate;
+}
+
 export default async function proposalTypeRoutes(fastify: FastifyInstance) {
   fastify.get('/', { preHandler: [fastify.authenticate] }, async () => {
     return fastify.prisma.proposalType.findMany({
@@ -74,14 +86,7 @@ export default async function proposalTypeRoutes(fastify: FastifyInstance) {
 
   fastify.post('/', { preHandler: [fastify.authenticate] }, async (request: FastifyRequest) => {
     const data = typeSchema.parse(request.body);
-    const baseSlug = slugify(data.name) || 'tipo';
-    const existing = await fastify.prisma.proposalType.findMany({
-      where: { slug: { startsWith: baseSlug } },
-      select: { slug: true },
-    });
-    const slug = existing.some((e) => e.slug === baseSlug)
-      ? `${baseSlug}-${existing.length + 1}`
-      : baseSlug;
+    const slug = await uniqueSlug(fastify.prisma, data.name);
 
     const type = await fastify.prisma.proposalType.create({
       data: {
