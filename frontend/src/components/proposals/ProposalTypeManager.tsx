@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react';
 import { proposalTypeApi, type ProposalType, type ProposalTypeField, type ProposalTypeTextBlock, type ProposalTypeItem, type ProposalFieldType } from '../../api/client';
+import { useToast } from '../../hooks/useToast';
+
+const normalizeKey = (s: string) =>
+  s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '');
+
+const getErrorMessage = (err: unknown, fallback: string) =>
+  err instanceof Error ? err.message : fallback;
 
 type Draft = {
   id?: number;
@@ -19,6 +26,7 @@ const emptyDraft = (): Draft => ({
 });
 
 export default function ProposalTypeManager() {
+  const toast = useToast();
   const [types, setTypes] = useState<ProposalType[]>([]);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [loading, setLoading] = useState(false);
@@ -55,13 +63,19 @@ export default function ProposalTypeManager() {
       else await proposalTypeApi.create(payload);
       setDraft(null);
       await load();
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Erro ao salvar tipo de proposta.'));
     } finally { setLoading(false); }
   };
 
   const remove = async (id: number) => {
     if (!confirm('Remover este tipo? Propostas já criadas não são afetadas.')) return;
-    await proposalTypeApi.delete(id);
-    await load();
+    try {
+      await proposalTypeApi.delete(id);
+      await load();
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Erro ao remover tipo de proposta.'));
+    }
   };
 
   const upd = (patch: Partial<Draft>) => setDraft((d) => (d ? { ...d, ...patch } : d));
@@ -80,7 +94,7 @@ export default function ProposalTypeManager() {
           {draft.fields.map((f, i) => (
             <div key={i} className="flex flex-wrap gap-2 items-center">
               <input className="border rounded px-2 py-1" placeholder="Rótulo" value={f.label} onChange={(e) => upd({ fields: draft.fields.map((x, j) => j === i ? { ...x, label: e.target.value } : x) })} />
-              <input className="border rounded px-2 py-1" placeholder="chave" value={f.key} onChange={(e) => upd({ fields: draft.fields.map((x, j) => j === i ? { ...x, key: e.target.value } : x) })} />
+              <input className="border rounded px-2 py-1" placeholder="chave" value={f.key} onChange={(e) => upd({ fields: draft.fields.map((x, j) => j === i ? { ...x, key: normalizeKey(e.target.value) } : x) })} />
               <select className="border rounded px-2 py-1" value={f.fieldType} onChange={(e) => upd({ fields: draft.fields.map((x, j) => j === i ? { ...x, fieldType: e.target.value as ProposalFieldType } : x) })}>
                 <option value="text">texto</option><option value="number">número</option><option value="boolean">sim/não</option><option value="select">seleção</option>
               </select>

@@ -7,13 +7,17 @@ export default function ProposalDocument() {
   const { id } = useParams();
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [company, setCompany] = useState<{ companyName: string; companyLogoUrl: string } | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
-    proposalApi.get(Number(id)).then(setProposal);
-    companyApi.get().then((c) => setCompany({ companyName: c.companyName, companyLogoUrl: c.companyLogoUrl }));
+    proposalApi.get(Number(id)).then(setProposal).catch(() => {
+      setError('Proposta não encontrada ou indisponível.');
+    });
+    companyApi.get().then((c) => setCompany({ companyName: c.companyName, companyLogoUrl: c.companyLogoUrl })).catch(() => {});
   }, [id]);
 
+  if (error) return <div className="p-8 text-rose-600 font-semibold">{error}</div>;
   if (!proposal) return <div className="p-8">Carregando…</div>;
 
   const fmt = (n: number) => `${proposal.currency} ${n.toFixed(2)}`;
